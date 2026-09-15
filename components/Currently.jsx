@@ -1,0 +1,62 @@
+/* Currently — living snapshot section (server component).
+   Asymmetric: heading + featured state left, signal-rail state list
+   right; random-snapshot island and tiny loop below. The only client
+   code in this section is CurrentlyNote — everything else ships
+   zero JavaScript. */
+
+import CurrentlyFeatured from "./CurrentlyFeatured";
+import CurrentlyLoop from "./CurrentlyLoop";
+import CurrentlyNote from "./CurrentlyNote";
+import CurrentlyStates from "./CurrentlyStates";
+import Reveal from "./Reveal";
+
+export default function Currently({ currently }) {
+  return (
+    <section className="currently" aria-labelledby="currently-heading">
+      <div className="currently__inner">
+        <div className="currently__head">
+          <Reveal>
+            <p className="currently__eyebrow">
+              <span className="currently__eyebrow-dot" aria-hidden="true" />
+              {currently.index} / {currently.eyebrow}
+            </p>
+          </Reveal>
+          <Reveal delay="0.08s">
+            <h2 className="currently__title" id="currently-heading">
+              {currently.heading}
+            </h2>
+          </Reveal>
+          <Reveal delay="0.16s">
+            <p className="currently__intro">{currently.intro}</p>
+          </Reveal>
+          <Reveal delay="0.22s">
+            <p className="currently__meta">
+              <span>{currently.snapshotLabel}</span>
+              <span className="currently__meta-sep" aria-hidden="true">
+                ·
+              </span>
+              <span>{currently.updatedLabel}</span>
+            </p>
+          </Reveal>
+        </div>
+
+        <div className="currently__grid">
+          <Reveal delay="0.1s" className="currently__featured-reveal">
+            <CurrentlyFeatured featured={currently.featured} />
+          </Reveal>
+          <Reveal delay="0.18s">
+            <CurrentlyStates states={currently.states} />
+          </Reveal>
+        </div>
+
+        <Reveal delay="0.1s">
+          <CurrentlyNote snapshots={currently.snapshots} buttonLabel={currently.snapshotButton} />
+        </Reveal>
+
+        <Reveal delay="0.12s">
+          <CurrentlyLoop steps={currently.loop} />
+        </Reveal>
+      </div>
+    </section>
+  );
+}
