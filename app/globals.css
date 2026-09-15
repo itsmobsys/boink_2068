@@ -115,6 +115,15 @@ body[data-state="ready"] .bg { opacity: 1; }
     linear-gradient(180deg, rgba(0, 0, 0, 0.25) 0%, transparent 18%, transparent 82%, rgba(0, 0, 0, 0.45) 100%);
 }
 
+/* scene continuity: these three lights dim slowly once the hero scene
+   scrolls past (body[data-scene="beyond"]) — the room stays, the key
+   light quiets, and About enters onto one continuous canvas.
+   Pure IO-driven class toggle, no scroll listeners. */
+.bg__core-light, .bg__accent-wash, .bg__avatar-halo { transition: opacity 1.4s ease; }
+body[data-scene="beyond"] .bg__core-light { opacity: 0.45; }
+body[data-scene="beyond"] .bg__accent-wash { opacity: 0.4; }
+body[data-scene="beyond"] .bg__avatar-halo { opacity: 0.5; }
+
 /* ── 4. HERO LAYOUT ────────────────────────────────────────── */
 .hero {
   position: relative;
@@ -438,6 +447,55 @@ body[data-state="ready"] .hero__boot { opacity: 0; }
 }
 .hero__meta-sep { opacity: 0.4; }
 
+/* ── 8b. SKILL CHIPS — tiny identity metadata, secondary to name/avatar.
+   Compact wrapped row directly below .hero__meta. Muted pill, 1px
+   border, small mono text; per-chip color lives ONLY in the 5px dot
+   (via --dot) plus a whisper of glow on hover. Non-interactive. */
+.hero__skills {
+  margin-top: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  max-width: 560px;
+  list-style: none;
+}
+.hero__skill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  line-height: 1.5;
+  white-space: nowrap;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  padding: 3px 10px 3px 9px;
+  transition:
+    border-color 0.25s ease,
+    color 0.25s ease,
+    transform 0.25s var(--ease-cinema);
+}
+.hero__skill i {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--dot, var(--accent));
+  opacity: 0.85;
+  transition: opacity 0.25s ease, box-shadow 0.25s ease;
+}
+.hero__skill:hover {
+  border-color: var(--line);
+  color: var(--text-dim);
+  transform: translateY(-1px);
+}
+.hero__skill:hover i {
+  opacity: 1;
+  box-shadow: 0 0 6px var(--dot, var(--accent));
+}
+
 /* ── 9. SCROLL INDICATOR ───────────────────────────────────── */
 .scroll-hint {
   position: absolute;
@@ -539,6 +597,13 @@ body[data-state="ready"] .reveal {
     letter-spacing: 0.16em;
     row-gap: 8px;
   }
+  .hero__skills {
+    margin-top: 16px;
+    gap: 5px;
+    max-width: 100%;
+    font-size: 10px;
+  }
+  .hero__skill { font-size: 10px; padding: 2px 9px 2px 8px; }
   .bg__avatar-halo {
     background: radial-gradient(
       200px 200px at 50% 30%,
@@ -578,6 +643,40 @@ body[data-state="ready"] .reveal {
   }
   .reveal-scroll.is-visible .about-visual__sweep { animation: none; }
   .about-visual__sweep { display: none; }
+  /* scene continuity resolves to rest instantly: hairlines drawn,
+     no exit dimming, no parallax drift, lights at full intensity */
+  .about__inner,
+  .vibe__inner,
+  .things__inner,
+  .currently__inner,
+  .final__inner {
+    border-top-color: var(--line-soft);
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .scene.is-past .about__inner,
+  .scene.is-past .vibe__inner,
+  .scene.is-past .things__inner,
+  .scene.is-past .currently__inner,
+  .scene.is-past .final__inner {
+    opacity: 1;
+    transform: none;
+  }
+  body[data-scene="beyond"] .bg__core-light { opacity: 1; }
+  body[data-scene="beyond"] .bg__accent-wash { opacity: 0.8; }
+  body[data-scene="beyond"] .bg__avatar-halo { opacity: 1; }
+  .bg__core-light, .bg__accent-wash, .bg__avatar-halo { transition: none; }
+  .scene.is-past .about-visual__plate::before,
+  .scene.is-past .final-mark__halo { transform: none; }
+  .about-visual__plate::before, .final-mark__halo { transition: none; }
+  /* streams: entries appear immediately, no stagger waits */
+  .reveal-scroll:not(.is-visible) .thing,
+  .reveal-scroll:not(.is-visible) .cur-state { opacity: 1; }
+  .reveal-scroll.is-visible .thing,
+  .reveal-scroll.is-visible .cur-state { animation: none; }
+  .thing, .cur-state { animation-delay: 0s !important; }
+  .cur-states::before { transform: none; transition: none; }
   /* vibe: state changes apply instantly, no staggered waits */
   .vibe-c__block,
   .vibe-source__line,
@@ -843,20 +942,25 @@ body[data-state="ready"] .reveal {
   color: var(--text-dim);
 }
 
-/* ── viewport reveal primitive (pairs with Reveal.jsx) ──
-   Motion language: content travels LEFT → RIGHT into its final
-   position, with depth layered per group through --rx. GPU-only
-   properties (transform / opacity / filter) — no layout thrash.
-   Shift distances shrink at smaller breakpoints (see responsive). */
+/* ── viewport reveal primitive (pairs with Reveal.jsx + motion.js) ──
+   ONE shared system for the whole page. Signature motion: content
+   travels LEFT → RIGHT into its final position — horizontal + depth,
+   never bottom → top — layered per group through --rx / --ry.
+   GPU-only properties (transform / opacity / filter), no layout
+   thrash. Stagger runs on a 65ms grid via --d; intensity via --dur
+   and the .reveal-tempo-slow finale treatment. Resting states are
+   completely stable: transitions end, will-change releases. */
 .reveal-scroll {
-  --rx: -60px;
+  --rx: -55px;
+  --ry: 14px;
+  --dur: 0.6s;
   opacity: 0;
-  transform: translateX(var(--rx)) translateY(14px);
+  transform: translateX(var(--rx)) translateY(var(--ry));
   filter: blur(10px);
   transition:
-    opacity 0.65s var(--ease-cinema),
-    transform 0.65s var(--ease-cinema),
-    filter 0.65s var(--ease-cinema);
+    opacity var(--dur) var(--ease-cinema),
+    transform var(--dur) var(--ease-cinema),
+    filter var(--dur) var(--ease-cinema);
   transition-delay: var(--d, 0s);
   will-change: opacity, transform, filter;
 }
@@ -867,12 +971,67 @@ body[data-state="ready"] .reveal {
   will-change: auto;
 }
 
-/* layered entrance depths — subtle parallax illusion, never excessive */
-.reveal-shift-eyebrow { --rx: -25px; }
-.reveal-shift-heading { --rx: -45px; }
-.reveal-shift-content { --rx: -60px; }
-.reveal-shift-deep { --rx: -70px; }
-.reveal-shift-visual { --rx: -80px; }
+/* layered entrance depths — the parallax illusion, never excessive.
+   Vertical travel stays secondary: the site reads horizontal + depth. */
+.reveal-shift-eyebrow { --rx: -20px; --ry: 6px; }
+.reveal-shift-heading { --rx: -40px; --ry: 10px; }
+.reveal-shift-content { --rx: -55px; --ry: 14px; }
+.reveal-shift-deep { --rx: -70px; --ry: 16px; }
+.reveal-shift-visual { --rx: -85px; --ry: 18px; }
+
+/* slow tempo — the final scene: longer settle, gentler blur, same
+   composition. Smaller travel is authored per element in Final.jsx. */
+.reveal-tempo-slow { --dur: 0.9s; filter: blur(6px); }
+
+/* ── scene continuity (pairs with SceneContinuity.jsx) ──
+   The page reads as one canvas: each section hairline draws itself
+   the moment its scene is entered (before the content reveals fire),
+   and an already-viewed scene resting above the viewport dims
+   *barely* — presence, never disappearance. Both are pure class
+   toggles from ONE shared observer; resting states stay stable. */
+.about__inner,
+.vibe__inner,
+.things__inner,
+.currently__inner,
+.final__inner {
+  border-top-color: transparent;
+  transition:
+    border-color 0.9s ease 0.05s,
+    opacity 0.8s ease,
+    transform 0.8s var(--ease-cinema);
+}
+.scene.is-inview .about__inner,
+.scene.is-inview .vibe__inner,
+.scene.is-inview .things__inner,
+.scene.is-inview .currently__inner,
+.scene.is-inview .final__inner {
+  border-top-color: var(--line-soft);
+}
+.scene.is-past .about__inner,
+.scene.is-past .vibe__inner,
+.scene.is-past .things__inner,
+.scene.is-past .currently__inner,
+.scene.is-past .final__inner {
+  opacity: 0.93;
+  transform: translateY(-5px);
+}
+
+/* ── decorative micro-parallax (two-state, IO-driven) ──
+   Purely ornamental layers drift 10–12px between resting states —
+   never paragraphs, headings, buttons, or body text, and never via
+   a scroll listener. The 1.2s smoothing keeps it atmospheric. */
+.about-visual__plate::before {
+  transition: transform 1.2s ease;
+}
+.scene.is-past .about-visual__plate::before {
+  transform: translateY(12px);
+}
+.final-mark__halo {
+  transition: transform 1.2s ease;
+}
+.scene.is-past .final-mark__halo {
+  transform: translateY(10px);
+}
 
 /* ── about responsive: designed, not shrunk ── */
 @media (max-width: 900px) {
@@ -1247,10 +1406,10 @@ body[data-state="ready"] .reveal {
    clean — animations can never stack. */
 .vibe-stage[data-phase="compiled"] .vibe-c__block {
   animation: vibe-in 0.35s var(--ease-cinema) both;
-  animation-delay: calc(var(--i) * 0.07s);
+  animation-delay: calc(var(--i) * 0.065s);
 }
 @keyframes vibe-in {
-  from { opacity: 0; transform: translateY(-12px); filter: blur(5px); }
+  from { opacity: 0; transform: translateY(-12px); filter: blur(6px); }
   to { opacity: 1; transform: translateY(0); filter: blur(0); }
 }
 
@@ -1629,15 +1788,20 @@ body[data-state="ready"] .reveal {
   box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 70%, transparent);
 }
 
-/* progressive entrance — rows stream in LEFT → RIGHT, each a touch
-   after the previous, when the wrapping Reveal fires */
+/* the continuous stream — seven rows, ONE composition.
+   Rows hold invisible until the wrapping Reveal fires (no flash of
+   unstyled content), then stream in from the left on a 50ms grid:
+   travel → brighten → settle, like a film title sequence.
+   Hover / focus / touch responses below are untouched. */
+.thing { --rx: -55px; }
+.reveal-scroll:not(.is-visible) .thing { opacity: 0; }
 .reveal-scroll.is-visible .thing {
-  animation: thing-in 0.65s var(--ease-cinema) both;
-  animation-delay: calc(var(--i, 0) * 0.06s);
+  animation: thing-in 0.55s var(--ease-cinema) both;
+  animation-delay: calc(var(--i, 0) * 0.05s);
 }
 @keyframes thing-in {
-  from { opacity: 0; transform: translateX(var(--rx, -60px)) translateY(12px); filter: blur(8px); }
-  to { opacity: 1; transform: none; filter: blur(0); }
+  from { opacity: 0; transform: translateX(var(--rx)) translateY(12px); filter: blur(8px) brightness(0.65); }
+  to { opacity: 1; transform: none; filter: blur(0) brightness(1); }
 }
 
 /* ── the loop — minimal recurring-system diagram ── */
@@ -1897,7 +2061,8 @@ body[data-state="ready"] .reveal {
   padding: 6px 0;
 }
 .cur-states::before {
-  /* the signal line passing through the categories */
+  /* the signal line passing through the categories — draws top → down
+     as the section comes online */
   content: "";
   position: absolute;
   left: 5px;
@@ -1905,6 +2070,26 @@ body[data-state="ready"] .reveal {
   bottom: 16px;
   width: 1px;
   background: linear-gradient(180deg, transparent, var(--line) 12%, var(--line) 88%, transparent);
+  transform: scaleY(0);
+  transform-origin: 50% 0;
+  transition: transform 0.9s var(--ease-cinema) 0.08s;
+}
+.reveal-scroll.is-visible .cur-states::before {
+  transform: scaleY(1);
+}
+/* system coming online — the featured state leads (its own Reveal),
+   then states resolve in sequence with progressively SMALLER travel:
+   the far rows barely move. Like things rows, they hold invisible
+   until their Reveal fires. */
+.reveal-scroll:not(.is-visible) .cur-state { opacity: 0; }
+.reveal-scroll.is-visible .cur-state {
+  --rx: calc(-46px + (var(--i, 0) * 5px));
+  animation: cur-state-in 0.5s var(--ease-cinema) both;
+  animation-delay: calc(0.05s + (var(--i, 0) * 0.055s));
+}
+@keyframes cur-state-in {
+  from { opacity: 0; transform: translateX(var(--rx)) translateY(8px); filter: blur(6px); }
+  to { opacity: 1; transform: none; filter: blur(0); }
 }
 .cur-state {
   position: relative;
@@ -2372,23 +2557,24 @@ html { scroll-behavior: smooth; }
 }
 
 /* ── reveal motion scaling — intensity follows viewport size ──
-   Desktop travels 50–80px, tablet 30–50px, mobile 15–30px.
+   Desktop travels 20–85px, tablet ~18–52px, mobile 15–30px.
    Placed last so these equal-specificity overrides always win. */
 @media (max-width: 900px) {
-  .reveal-shift-eyebrow { --rx: -20px; }
-  .reveal-shift-heading { --rx: -35px; }
-  .reveal-shift-content { --rx: -45px; }
-  .reveal-shift-deep { --rx: -50px; }
-  .reveal-shift-visual { --rx: -50px; }
+  .reveal-shift-eyebrow { --rx: -18px; --ry: 4px; }
+  .reveal-shift-heading { --rx: -30px; --ry: 6px; }
+  .reveal-shift-content { --rx: -40px; --ry: 8px; }
+  .reveal-shift-deep { --rx: -48px; --ry: 10px; }
+  .reveal-shift-visual { --rx: -52px; --ry: 12px; }
   .thing { --rx: -40px; }
+  .reveal-scroll.is-visible .cur-state { --rx: calc(-36px + (var(--i, 0) * 4px)); }
 }
 
 @media (max-width: 640px) {
-  .reveal-scroll { transform: translateX(var(--rx)) translateY(10px); }
-  .reveal-shift-eyebrow { --rx: -15px; }
-  .reveal-shift-heading { --rx: -20px; }
-  .reveal-shift-content { --rx: -24px; }
-  .reveal-shift-deep { --rx: -28px; }
-  .reveal-shift-visual { --rx: -30px; }
+  .reveal-shift-eyebrow { --rx: -15px; --ry: 4px; }
+  .reveal-shift-heading { --rx: -20px; --ry: 5px; }
+  .reveal-shift-content { --rx: -24px; --ry: 6px; }
+  .reveal-shift-deep { --rx: -28px; --ry: 8px; }
+  .reveal-shift-visual { --rx: -30px; --ry: 8px; }
   .thing { --rx: -24px; }
+  .reveal-scroll.is-visible .cur-state { --rx: calc(-26px + (var(--i, 0) * 3px)); }
 }

@@ -11,30 +11,31 @@ import Reveal from "./Reveal";
 
 export default function Final({ final, displayName, avatarUrl }) {
   return (
-    <section className="final" aria-labelledby="final-heading">
+    <section className="final scene" data-scene="final" aria-labelledby="final-heading">
       <div className="final__inner">
-        <Reveal shift="eyebrow">
+        <Reveal shift="eyebrow" tempo="slow">
           <p className="final__eyebrow">
             <span className="final__eyebrow-dot" aria-hidden="true" />
             {final.index} / {final.eyebrow}
           </p>
         </Reveal>
 
-        <Reveal delay="0.08s" shift="heading">
+        {/* identity mark arrives first — the camera's resting point */}
+        <Reveal delay="0.06s" shift="heading" tempo="slow">
           <FinalIdentity displayName={displayName} avatarUrl={avatarUrl} />
         </Reveal>
 
-        <Reveal delay="0.16s" shift="heading">
+        <Reveal delay="0.14s" shift="heading" tempo="slow">
           <h2 className="final__statement" id="final-heading">
             {final.statement}
           </h2>
         </Reveal>
 
-        <Reveal delay="0.24s">
+        <Reveal delay="0.22s" tempo="slow">
           <p className="final__sub">{final.sub}</p>
         </Reveal>
 
-        <Reveal delay="0.3s" shift="deep">
+        <Reveal delay="0.3s" tempo="slow">
           <RandomThought
             thoughts={final.thoughts}
             buttonLabel={final.thoughtLabel}
@@ -42,11 +43,11 @@ export default function Final({ final, displayName, avatarUrl }) {
           />
         </Reveal>
 
-        <Reveal delay="0.34s" shift="deep">
+        <Reveal delay="0.36s" tempo="slow">
           <FinalLoop steps={final.loop} />
         </Reveal>
 
-        <Reveal delay="0.38s" shift="deep">
+        <Reveal delay="0.42s" shift="eyebrow" tempo="slow">
           <div className="final__exit">
             <a className="final__top" href="#hero">
               {final.backToTop}

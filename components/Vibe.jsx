@@ -8,7 +8,7 @@ import VibeCompiler from "./VibeCompiler";
 
 export default function Vibe({ vibe }) {
   return (
-    <section className="vibe" aria-labelledby="vibe-heading">
+    <section className="vibe scene" data-scene="vibe" aria-labelledby="vibe-heading">
       <div className="vibe__inner">
         <div className="vibe__head">
           <Reveal shift="eyebrow">
@@ -17,12 +17,12 @@ export default function Vibe({ vibe }) {
               {vibe.index} / {vibe.eyebrow}
             </p>
           </Reveal>
-          <Reveal delay="0.08s" shift="heading">
+          <Reveal delay="0.065s" shift="heading">
             <h2 className="vibe__title" id="vibe-heading">
               {vibe.heading}
             </h2>
           </Reveal>
-          <Reveal delay="0.16s">
+          <Reveal delay="0.13s">
             <p className="vibe__description">{vibe.description}</p>
           </Reveal>
         </div>

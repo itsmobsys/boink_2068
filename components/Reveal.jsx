@@ -1,15 +1,20 @@
 "use client";
 
-/* Reveal — tiny viewport-reveal primitive (client).
-   IntersectionObserver, fires once, then disconnects. Zero idle cost:
-   no scroll listeners, no animation library. Siblings of the hero's
-   boot-sequence reveal system — separate namespace, same philosophy.
-   Motion language: content travels LEFT → RIGHT into place, with
-   depth layered per group via the `shift` prop (see globals.css):
-   eyebrow (-25) / heading (-45) / content (-60) / deep (-70) /
-   visual (-80). Distances shrink automatically on smaller screens. */
+/* Reveal — the one shared reveal primitive for the entire site.
+   Server components stay JavaScript-free; they declare intent via
+   props and this tiny client wrapper executes it through the shared
+   observer in motion.js (one IntersectionObserver for ALL reveals).
+   Props:
+     shift    depth layer: eyebrow | heading | content | deep | visual
+     delay    stagger offset on the 65ms grid ("0s", "0.065s", …)
+     duration optional entrance length override ("0.5s") — intensity
+     tempo    "steady" (default) | "slow" (final-scene restraint)
+   Rendered attributes (data-motion / data-depth) make every animated
+   node greppable for QA. SSR markup is identical with or without JS —
+   effects only ever ADD the is-visible class, never restructure. */
 
 import { useEffect, useRef } from "react";
+import { observeReveal } from "./motion";
 
 const SHIFTS = {
   eyebrow: "reveal-shift-eyebrow",
@@ -19,36 +24,30 @@ const SHIFTS = {
   visual: "reveal-shift-visual",
 };
 
-export default function Reveal({ children, delay = "0s", className = "", shift = "content" }) {
+export default function Reveal({
+  children,
+  delay = "0s",
+  duration,
+  tempo = "steady",
+  className = "",
+  shift = "content",
+}) {
   const ref = useRef(null);
 
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      el.classList.add("is-visible");
-      return;
-    }
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-visible");
-            io.unobserve(entry.target); // animate once, never replay
-          }
-        }
-      },
-      { threshold: 0.2, rootMargin: "0px 0px -8% 0px" }
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
+  useEffect(() => observeReveal(ref.current), []);
+
+  const style = { "--d": delay };
+  if (duration) style["--dur"] = duration;
 
   return (
     <div
       ref={ref}
-      className={`reveal-scroll ${SHIFTS[shift] || SHIFTS.content}${className ? " " + className : ""}`}
-      style={{ "--d": delay }}
+      data-motion="reveal"
+      data-depth={shift}
+      className={`reveal-scroll ${SHIFTS[shift] || SHIFTS.content}${
+        tempo === "slow" ? " reveal-tempo-slow" : ""
+      }${className ? " " + className : ""}`}
+      style={style}
     >
       {children}
     </div>

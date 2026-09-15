@@ -9,7 +9,7 @@ import ThingsItem from "./ThingsItem";
 
 export default function ThingsList({ items }) {
   return (
-    <Reveal className="things__reveal">
+    <Reveal delay="0.13s" className="things__reveal">
       <ol className="things__list">
         {items.map((item, i) => (
           <ThingsItem key={item.index} item={item} position={i} />

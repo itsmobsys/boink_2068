@@ -12,7 +12,7 @@ import Reveal from "./Reveal";
 
 export default function Currently({ currently }) {
   return (
-    <section className="currently" aria-labelledby="currently-heading">
+    <section className="currently scene" data-scene="currently" aria-labelledby="currently-heading">
       <div className="currently__inner">
         <div className="currently__head">
           <Reveal shift="eyebrow">
@@ -21,15 +21,15 @@ export default function Currently({ currently }) {
               {currently.index} / {currently.eyebrow}
             </p>
           </Reveal>
-          <Reveal delay="0.08s" shift="heading">
+          <Reveal delay="0.065s" shift="heading">
             <h2 className="currently__title" id="currently-heading">
               {currently.heading}
             </h2>
           </Reveal>
-          <Reveal delay="0.16s">
+          <Reveal delay="0.13s">
             <p className="currently__intro">{currently.intro}</p>
           </Reveal>
-          <Reveal delay="0.22s" shift="deep">
+          <Reveal delay="0.195s" shift="deep">
             <p className="currently__meta">
               <span>{currently.snapshotLabel}</span>
               <span className="currently__meta-sep" aria-hidden="true">
@@ -41,10 +41,12 @@ export default function Currently({ currently }) {
         </div>
 
         <div className="currently__grid">
-          <Reveal delay="0.1s" className="currently__featured-reveal">
+          {/* featured state enters first — the system anchor */}
+          <Reveal className="currently__featured-reveal">
             <CurrentlyFeatured featured={currently.featured} />
           </Reveal>
-          <Reveal delay="0.18s" shift="deep">
+        {/* snapshot island enters last */}
+        <Reveal delay="0.2s" shift="deep">
             <CurrentlyStates states={currently.states} />
           </Reveal>
         </div>
@@ -53,7 +55,7 @@ export default function Currently({ currently }) {
           <CurrentlyNote snapshots={currently.snapshots} buttonLabel={currently.snapshotButton} />
         </Reveal>
 
-        <Reveal delay="0.12s" shift="deep">
+        <Reveal delay="0.24s" shift="deep">
           <CurrentlyLoop steps={currently.loop} />
         </Reveal>
       </div>

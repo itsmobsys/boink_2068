@@ -8,7 +8,7 @@ import Reveal from "./Reveal";
 
 export default function About({ about }) {
   return (
-    <section className="about" aria-labelledby="about-heading">
+    <section className="about scene" data-scene="about" aria-labelledby="about-heading">
       <div className="about__inner">
         <div className="about__grid">
           {/* LEFT — index, heading, visual anchor */}
@@ -19,35 +19,35 @@ export default function About({ about }) {
                 {about.index} / {about.eyebrow}
               </p>
             </Reveal>
-            <Reveal delay="0.08s" shift="heading">
+            <Reveal delay="0.065s" shift="heading">
               <h2 className="about__title" id="about-heading">
                 {about.heading}
               </h2>
             </Reveal>
-            <Reveal delay="0.16s" shift="visual">
+            <Reveal delay="0.13s" shift="visual">
               <AboutVisual visual={about.visual} />
             </Reveal>
           </div>
 
           {/* RIGHT — copy */}
           <div className="about__copy">
-            <Reveal delay="0.1s">
+            <Reveal delay="0.065s">
               <p className="about__context">
                 <span className="about__context-label">{about.contextLabel}</span>
                 <span className="about__context-rule" aria-hidden="true" />
               </p>
             </Reveal>
-            <Reveal delay="0.18s">
+            <Reveal delay="0.13s">
               <p className="about__lede">{about.lede}</p>
             </Reveal>
-            <Reveal delay="0.26s">
+            <Reveal delay="0.195s">
               <p className="about__body">{about.body}</p>
             </Reveal>
           </div>
         </div>
 
         {/* LOWER — quiet attribute row */}
-        <Reveal delay="0.1s" shift="deep">
+        <Reveal delay="0.13s" shift="deep">
           <div className="about__foot">
             <dl className="about__attrs">
               {about.attributes.map((attr) => (

@@ -7,8 +7,8 @@
 export default function CurrentlyStates({ states }) {
   return (
     <ul className="cur-states">
-      {states.map((state) => (
-        <li className="cur-state" key={state.name} tabIndex={0}>
+      {states.map((state, i) => (
+        <li className="cur-state" key={state.name} tabIndex={0} style={{ "--i": i }}>
           <span className="cur-state__node" aria-hidden="true" />
           <span className="cur-state__glyph" aria-hidden="true">
             {state.glyph}

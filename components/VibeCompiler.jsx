@@ -67,14 +67,15 @@ export default function VibeCompiler({ vibe }) {
         <div className="vibe-deck__progress" aria-hidden="true" />
 
         <div className="vibe-deck__grid">
-          {/* SOURCE — layout class composes onto the Reveal grid item */}
-          <Reveal delay="0.06s" className="vibe-deck__pane">
+          {/* SOURCE — layout class composes onto the Reveal grid item.
+              Enters slightly faster than its siblings (shorter run). */}
+          <Reveal delay="0.065s" duration="0.5s" className="vibe-deck__pane">
             <p className="vibe-pane-tag">Source</p>
             <VibeSource data={vibe.data} />
           </Reveal>
 
           {/* COMPILE CONTROL */}
-          <Reveal delay="0.12s" className="vibe-deck__action">
+          <Reveal delay="0.13s" className="vibe-deck__action">
             <span className="vibe-deck__wire" aria-hidden="true" />
             <button
               type="button"
@@ -99,8 +100,8 @@ export default function VibeCompiler({ vibe }) {
             <span className="vibe-deck__wire" aria-hidden="true" />
           </Reveal>
 
-          {/* OUTPUT */}
-          <Reveal delay="0.18s" shift="deep" className="vibe-deck__pane">
+          {/* OUTPUT — arrives last, deepest travel */}
+          <Reveal delay="0.195s" shift="deep" className="vibe-deck__pane">
             <p className="vibe-pane-tag">Output</p>
             <div id="vibe-output">
               {isCompiled ? (

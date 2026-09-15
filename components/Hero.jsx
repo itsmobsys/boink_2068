@@ -10,6 +10,8 @@ import CursorAura from "./CursorAura";
 import HeroAvatar from "./HeroAvatar";
 import HeroIdentity from "./HeroIdentity";
 import HeroMetadata from "./HeroMetadata";
+import HeroSkills from "./HeroSkills";
+import SceneContinuity from "./SceneContinuity";
 import ScrollIndicator from "./ScrollIndicator";
 
 export default function Hero({ profile, children }) {
@@ -44,9 +46,10 @@ export default function Hero({ profile, children }) {
     <div className="site" style={{ "--accent": profile.accent }}>
       <Background />
       <CursorAura />
+      <SceneContinuity />
 
       {/* ── HERO · FIRST VIEWPORT ONLY ── */}
-      <main className="hero" id="hero">
+      <main className="hero" id="hero" data-scene="hero">
         {/* boot status: extremely subtle, clears fast */}
         <p className="hero__boot" role="status" aria-live="polite">
           <span className="hero__boot-dot" aria-hidden="true" />
@@ -76,6 +79,8 @@ export default function Hero({ profile, children }) {
           metaBadges={profile.metaBadges}
           presence={profile.presence}
         />
+
+        <HeroSkills skills={profile.skills} />
 
         <ScrollIndicator />
 
