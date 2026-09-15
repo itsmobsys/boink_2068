@@ -11,13 +11,13 @@ export default function Vibe({ vibe }) {
     <section className="vibe" aria-labelledby="vibe-heading">
       <div className="vibe__inner">
         <div className="vibe__head">
-          <Reveal>
+          <Reveal shift="eyebrow">
             <p className="vibe__eyebrow">
               <span className="vibe__eyebrow-dot" aria-hidden="true" />
               {vibe.index} / {vibe.eyebrow}
             </p>
           </Reveal>
-          <Reveal delay="0.08s">
+          <Reveal delay="0.08s" shift="heading">
             <h2 className="vibe__title" id="vibe-heading">
               {vibe.heading}
             </h2>
@@ -27,9 +27,10 @@ export default function Vibe({ vibe }) {
           </Reveal>
         </div>
 
-        <Reveal delay="0.1s">
-          <VibeCompiler vibe={vibe} />
-        </Reveal>
+        {/* pane-level scroll reveals live inside VibeCompiler so the
+            source → control → output order reads on entry without
+            nesting reveal wrappers */}
+        <VibeCompiler vibe={vibe} />
       </div>
     </section>
   );

@@ -527,6 +527,7 @@ body[data-state="ready"] .reveal {
     transform: none;
     filter: none;
     transition: none;
+    transition-delay: 0s;
   }
   .reveal-scroll.is-visible .about-visual__sweep { animation: none; }
   .about-visual__sweep { display: none; }
@@ -795,15 +796,20 @@ body[data-state="ready"] .reveal {
   color: var(--text-dim);
 }
 
-/* ── viewport reveal primitive (pairs with Reveal.jsx) ── */
+/* ── viewport reveal primitive (pairs with Reveal.jsx) ──
+   Motion language: content travels LEFT → RIGHT into its final
+   position, with depth layered per group through --rx. GPU-only
+   properties (transform / opacity / filter) — no layout thrash.
+   Shift distances shrink at smaller breakpoints (see responsive). */
 .reveal-scroll {
+  --rx: -60px;
   opacity: 0;
-  transform: translateY(22px);
-  filter: blur(6px);
+  transform: translateX(var(--rx)) translateY(14px);
+  filter: blur(10px);
   transition:
-    opacity 0.95s var(--ease-cinema),
-    transform 0.95s var(--ease-cinema),
-    filter 0.95s var(--ease-cinema);
+    opacity 0.65s var(--ease-cinema),
+    transform 0.65s var(--ease-cinema),
+    filter 0.65s var(--ease-cinema);
   transition-delay: var(--d, 0s);
   will-change: opacity, transform, filter;
 }
@@ -813,6 +819,13 @@ body[data-state="ready"] .reveal {
   filter: blur(0);
   will-change: auto;
 }
+
+/* layered entrance depths — subtle parallax illusion, never excessive */
+.reveal-shift-eyebrow { --rx: -25px; }
+.reveal-shift-heading { --rx: -45px; }
+.reveal-shift-content { --rx: -60px; }
+.reveal-shift-deep { --rx: -70px; }
+.reveal-shift-visual { --rx: -80px; }
 
 /* ── about responsive: designed, not shrunk ── */
 @media (max-width: 900px) {
@@ -1180,14 +1193,18 @@ body[data-state="ready"] .reveal {
 .vibe-c__block { margin-bottom: 30px; }
 .vibe-c__block:last-child { margin-bottom: 4px; }
 
-/* entrance runs on mount, staggered per block — only in compiled phase */
+/* entrance runs on mount, staggered per block — only in compiled phase.
+   AI-writing rhythm: chunks resolve top → down, ~70ms apart, each
+   settling in ~350ms so the full output lands in well under 2s.
+   The compiled view remounts on every compile, so each run starts
+   clean — animations can never stack. */
 .vibe-stage[data-phase="compiled"] .vibe-c__block {
-  animation: vibe-in 0.7s var(--ease-cinema) both;
-  animation-delay: calc(0.12s + var(--i) * 0.08s);
+  animation: vibe-in 0.35s var(--ease-cinema) both;
+  animation-delay: calc(var(--i) * 0.07s);
 }
 @keyframes vibe-in {
-  from { opacity: 0; transform: translateY(14px); filter: blur(5px); }
-  to { opacity: 1; transform: none; filter: blur(0); }
+  from { opacity: 0; transform: translateY(-12px); filter: blur(5px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
 }
 
 .vibe-c__label {
@@ -1565,13 +1582,14 @@ body[data-state="ready"] .reveal {
   box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 70%, transparent);
 }
 
-/* progressive entrance — runs when the wrapping Reveal fires */
+/* progressive entrance — rows stream in LEFT → RIGHT, each a touch
+   after the previous, when the wrapping Reveal fires */
 .reveal-scroll.is-visible .thing {
-  animation: thing-in 0.8s var(--ease-cinema) both;
+  animation: thing-in 0.65s var(--ease-cinema) both;
   animation-delay: calc(var(--i, 0) * 0.06s);
 }
 @keyframes thing-in {
-  from { opacity: 0; transform: translateY(16px); filter: blur(5px); }
+  from { opacity: 0; transform: translateX(var(--rx, -60px)) translateY(12px); filter: blur(8px); }
   to { opacity: 1; transform: none; filter: blur(0); }
 }
 
@@ -2304,4 +2322,26 @@ html { scroll-behavior: smooth; }
 @media (min-width: 1900px) {
   .final__inner { max-width: 860px; }
   .final__statement { font-size: 5.6rem; }
+}
+
+/* ── reveal motion scaling — intensity follows viewport size ──
+   Desktop travels 50–80px, tablet 30–50px, mobile 15–30px.
+   Placed last so these equal-specificity overrides always win. */
+@media (max-width: 900px) {
+  .reveal-shift-eyebrow { --rx: -20px; }
+  .reveal-shift-heading { --rx: -35px; }
+  .reveal-shift-content { --rx: -45px; }
+  .reveal-shift-deep { --rx: -50px; }
+  .reveal-shift-visual { --rx: -50px; }
+  .thing { --rx: -40px; }
+}
+
+@media (max-width: 640px) {
+  .reveal-scroll { transform: translateX(var(--rx)) translateY(10px); }
+  .reveal-shift-eyebrow { --rx: -15px; }
+  .reveal-shift-heading { --rx: -20px; }
+  .reveal-shift-content { --rx: -24px; }
+  .reveal-shift-deep { --rx: -28px; }
+  .reveal-shift-visual { --rx: -30px; }
+  .thing { --rx: -24px; }
 }

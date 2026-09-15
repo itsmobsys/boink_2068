@@ -13,18 +13,18 @@ export default function About({ about }) {
         <div className="about__grid">
           {/* LEFT — index, heading, visual anchor */}
           <div className="about__head">
-            <Reveal>
+            <Reveal shift="eyebrow">
               <p className="about__eyebrow">
                 <span className="about__eyebrow-dot" aria-hidden="true" />
                 {about.index} / {about.eyebrow}
               </p>
             </Reveal>
-            <Reveal delay="0.08s">
+            <Reveal delay="0.08s" shift="heading">
               <h2 className="about__title" id="about-heading">
                 {about.heading}
               </h2>
             </Reveal>
-            <Reveal delay="0.16s">
+            <Reveal delay="0.16s" shift="visual">
               <AboutVisual visual={about.visual} />
             </Reveal>
           </div>
@@ -47,7 +47,7 @@ export default function About({ about }) {
         </div>
 
         {/* LOWER — quiet attribute row */}
-        <Reveal delay="0.1s">
+        <Reveal delay="0.1s" shift="deep">
           <div className="about__foot">
             <dl className="about__attrs">
               {about.attributes.map((attr) => (

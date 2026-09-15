@@ -11,13 +11,13 @@ export default function ThingsIDo({ things }) {
     <section className="things" aria-labelledby="things-heading">
       <div className="things__inner">
         <div className="things__head">
-          <Reveal>
+          <Reveal shift="eyebrow">
             <p className="things__eyebrow">
               <span className="things__eyebrow-dot" aria-hidden="true" />
               {things.index} / {things.eyebrow}
             </p>
           </Reveal>
-          <Reveal delay="0.08s">
+          <Reveal delay="0.08s" shift="heading">
             <h2 className="things__title" id="things-heading">
               {things.heading}
             </h2>
@@ -29,7 +29,7 @@ export default function ThingsIDo({ things }) {
 
         <ThingsList items={things.items} />
 
-        <Reveal delay="0.1s">
+        <Reveal delay="0.1s" shift="deep">
           <div className="things-loop" aria-label="Recurring loop">
             <ol className="things-loop__steps">
               {things.loop.steps.map((step, i) => (
@@ -52,7 +52,7 @@ export default function ThingsIDo({ things }) {
           </div>
         </Reveal>
 
-        <Reveal delay="0.12s">
+        <Reveal delay="0.12s" shift="deep">
           <p className="things__closing">
             <span className="things__pulse" aria-hidden="true" />
             {things.closing}

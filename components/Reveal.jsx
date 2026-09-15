@@ -3,11 +3,23 @@
 /* Reveal — tiny viewport-reveal primitive (client).
    IntersectionObserver, fires once, then disconnects. Zero idle cost:
    no scroll listeners, no animation library. Siblings of the hero's
-   boot-sequence reveal system — separate namespace, same philosophy. */
+   boot-sequence reveal system — separate namespace, same philosophy.
+   Motion language: content travels LEFT → RIGHT into place, with
+   depth layered per group via the `shift` prop (see globals.css):
+   eyebrow (-25) / heading (-45) / content (-60) / deep (-70) /
+   visual (-80). Distances shrink automatically on smaller screens. */
 
 import { useEffect, useRef } from "react";
 
-export default function Reveal({ children, delay = "0s", className = "" }) {
+const SHIFTS = {
+  eyebrow: "reveal-shift-eyebrow",
+  heading: "reveal-shift-heading",
+  content: "reveal-shift-content",
+  deep: "reveal-shift-deep",
+  visual: "reveal-shift-visual",
+};
+
+export default function Reveal({ children, delay = "0s", className = "", shift = "content" }) {
   const ref = useRef(null);
 
   useEffect(() => {
@@ -33,7 +45,11 @@ export default function Reveal({ children, delay = "0s", className = "" }) {
   }, []);
 
   return (
-    <div ref={ref} className={`reveal-scroll${className ? " " + className : ""}`} style={{ "--d": delay }}>
+    <div
+      ref={ref}
+      className={`reveal-scroll ${SHIFTS[shift] || SHIFTS.content}${className ? " " + className : ""}`}
+      style={{ "--d": delay }}
+    >
       {children}
     </div>
   );

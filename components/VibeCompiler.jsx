@@ -7,6 +7,7 @@
    No animation library, no loops, no polling. */
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Reveal from "./Reveal";
 import VibeCompiled from "./VibeCompiled";
 import VibeSource from "./VibeSource";
 
@@ -52,26 +53,28 @@ export default function VibeCompiler({ vibe }) {
     <div className="vibe-stage" data-phase={phase}>
       <div className="vibe-deck">
         {/* status bar — the visual anchor that reacts to compilation */}
-        <div className="vibe-deck__bar">
-          <span className="vibe-deck__file">
-            <span className="vibe-deck__dot" aria-hidden="true" />
-            {vibe.filename}
-          </span>
-          <span className="vibe-deck__status" aria-hidden="true">
-            {STATUS[phase]}
-          </span>
-        </div>
+        <Reveal shift="eyebrow">
+          <div className="vibe-deck__bar">
+            <span className="vibe-deck__file">
+              <span className="vibe-deck__dot" aria-hidden="true" />
+              {vibe.filename}
+            </span>
+            <span className="vibe-deck__status" aria-hidden="true">
+              {STATUS[phase]}
+            </span>
+          </div>
+        </Reveal>
         <div className="vibe-deck__progress" aria-hidden="true" />
 
         <div className="vibe-deck__grid">
-          {/* SOURCE */}
-          <div className="vibe-deck__pane">
+          {/* SOURCE — layout class composes onto the Reveal grid item */}
+          <Reveal delay="0.06s" className="vibe-deck__pane">
             <p className="vibe-pane-tag">Source</p>
             <VibeSource data={vibe.data} />
-          </div>
+          </Reveal>
 
           {/* COMPILE CONTROL */}
-          <div className="vibe-deck__action">
+          <Reveal delay="0.12s" className="vibe-deck__action">
             <span className="vibe-deck__wire" aria-hidden="true" />
             <button
               type="button"
@@ -94,10 +97,10 @@ export default function VibeCompiler({ vibe }) {
               )}
             </button>
             <span className="vibe-deck__wire" aria-hidden="true" />
-          </div>
+          </Reveal>
 
           {/* OUTPUT */}
-          <div className="vibe-deck__pane">
+          <Reveal delay="0.18s" shift="deep" className="vibe-deck__pane">
             <p className="vibe-pane-tag">Output</p>
             <div id="vibe-output">
               {isCompiled ? (
@@ -114,7 +117,7 @@ export default function VibeCompiler({ vibe }) {
                 </div>
               )}
             </div>
-          </div>
+          </Reveal>
         </div>
       </div>
 

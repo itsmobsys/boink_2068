@@ -15,13 +15,13 @@ export default function Currently({ currently }) {
     <section className="currently" aria-labelledby="currently-heading">
       <div className="currently__inner">
         <div className="currently__head">
-          <Reveal>
+          <Reveal shift="eyebrow">
             <p className="currently__eyebrow">
               <span className="currently__eyebrow-dot" aria-hidden="true" />
               {currently.index} / {currently.eyebrow}
             </p>
           </Reveal>
-          <Reveal delay="0.08s">
+          <Reveal delay="0.08s" shift="heading">
             <h2 className="currently__title" id="currently-heading">
               {currently.heading}
             </h2>
@@ -29,7 +29,7 @@ export default function Currently({ currently }) {
           <Reveal delay="0.16s">
             <p className="currently__intro">{currently.intro}</p>
           </Reveal>
-          <Reveal delay="0.22s">
+          <Reveal delay="0.22s" shift="deep">
             <p className="currently__meta">
               <span>{currently.snapshotLabel}</span>
               <span className="currently__meta-sep" aria-hidden="true">
@@ -44,16 +44,16 @@ export default function Currently({ currently }) {
           <Reveal delay="0.1s" className="currently__featured-reveal">
             <CurrentlyFeatured featured={currently.featured} />
           </Reveal>
-          <Reveal delay="0.18s">
+          <Reveal delay="0.18s" shift="deep">
             <CurrentlyStates states={currently.states} />
           </Reveal>
         </div>
 
-        <Reveal delay="0.1s">
+        <Reveal delay="0.1s" shift="deep">
           <CurrentlyNote snapshots={currently.snapshots} buttonLabel={currently.snapshotButton} />
         </Reveal>
 
-        <Reveal delay="0.12s">
+        <Reveal delay="0.12s" shift="deep">
           <CurrentlyLoop steps={currently.loop} />
         </Reveal>
       </div>

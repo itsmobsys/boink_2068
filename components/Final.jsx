@@ -13,18 +13,18 @@ export default function Final({ final, displayName, avatarUrl }) {
   return (
     <section className="final" aria-labelledby="final-heading">
       <div className="final__inner">
-        <Reveal>
+        <Reveal shift="eyebrow">
           <p className="final__eyebrow">
             <span className="final__eyebrow-dot" aria-hidden="true" />
             {final.index} / {final.eyebrow}
           </p>
         </Reveal>
 
-        <Reveal delay="0.08s">
+        <Reveal delay="0.08s" shift="heading">
           <FinalIdentity displayName={displayName} avatarUrl={avatarUrl} />
         </Reveal>
 
-        <Reveal delay="0.16s">
+        <Reveal delay="0.16s" shift="heading">
           <h2 className="final__statement" id="final-heading">
             {final.statement}
           </h2>
@@ -34,7 +34,7 @@ export default function Final({ final, displayName, avatarUrl }) {
           <p className="final__sub">{final.sub}</p>
         </Reveal>
 
-        <Reveal delay="0.3s">
+        <Reveal delay="0.3s" shift="deep">
           <RandomThought
             thoughts={final.thoughts}
             buttonLabel={final.thoughtLabel}
@@ -42,11 +42,11 @@ export default function Final({ final, displayName, avatarUrl }) {
           />
         </Reveal>
 
-        <Reveal delay="0.34s">
+        <Reveal delay="0.34s" shift="deep">
           <FinalLoop steps={final.loop} />
         </Reveal>
 
-        <Reveal delay="0.38s">
+        <Reveal delay="0.38s" shift="deep">
           <div className="final__exit">
             <a className="final__top" href="#hero">
               {final.backToTop}
