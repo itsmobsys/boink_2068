@@ -728,10 +728,16 @@ body[data-state="ready"] .reveal {
   .reveal-scroll.is-visible .cur-state { animation: none !important; }
   .thing, .cur-state { animation-delay: 0s !important; }
   .cur-states::before { transform: none !important; transition: none !important; }
-  /* deck glide never drifts or softens for reduced-motion users */
+  /* deck + section glides never drift or soften for reduced-motion
+     users (section roots lack the mobile pinning block, so these
+     need the same strength as the deck's resets) */
   .vibe-stage,
   .vibe-stage.vp-below,
-  .vibe-stage.vp-above {
+  .vibe-stage.vp-above,
+  .scene-root,
+  .scene-root.vp-below,
+  .scene-root.vp-above,
+  .scene-root.vp-center {
     translate: 0 0 !important;
     opacity: 1 !important;
     filter: none !important;
@@ -1054,7 +1060,7 @@ body[data-state="ready"] .reveal {
 .reveal-shift-heading { --rx: -62px; --ry: 12px; --blur-in: 16px; }
 .reveal-shift-content { --rx: -88px; --ry: 18px; --blur-in: 20px; }
 .reveal-shift-deep { --rx: -108px; --ry: 22px; --blur-in: 22px; }
-.reveal-shift-visual { --rx: -126px; --ry: 24px; --blur-in: 24px; }
+.reveal-shift-visual { --rx: -118px; --ry: 22px; --blur-in: 22px; }
 
 /* slow tempo — the final scene: longer settle, softer ride, same
    composition. Blur now resolves through the shared is-visible rule
@@ -1094,6 +1100,26 @@ body[data-state="ready"] .reveal {
   opacity: 0.88;
   transform: translateY(-8px);
 }
+
+/* site-wide viewport glide — the five section roots ride the same
+   viewport-phase observer as the Vibe deck (SceneContinuity adds
+   .scene-root client-side only; SSR markup is untouched). Approach
+   softens and lifts, center is the one crisp resting state, leaving
+   only drifts (the inner's is-past dim already carries the exit —
+   no double-dimming, no shift below the fold). Drift rides the
+   translate property so it can never fight the reveal transform. */
+.scene-root {
+  translate: 0 0;
+  opacity: 1;
+  filter: none;
+  transition:
+    translate 1.1s var(--ease-glide),
+    opacity 1.1s ease,
+    filter 1.1s ease;
+}
+.scene-root.vp-below { translate: 0 10px; opacity: 0.965; filter: blur(1.5px); }
+.scene-root.vp-above { translate: 0 -10px; opacity: 0.975; filter: blur(0.75px); }
+.scene-root.vp-center { translate: 0 0; opacity: 1; filter: none; }
 
 /* ── decorative micro-parallax (two-state, IO-driven) ──
    Purely ornamental layers drift 10–12px between resting states —
@@ -1610,8 +1636,8 @@ body[data-state="ready"] .reveal {
 @keyframes vibe-output-in {
   from {
     opacity: 0;
-    transform: translateY(-16px);
-    filter: blur(8px);
+    transform: translateY(-11px);
+    filter: blur(6px);
   }
 }
 
@@ -2439,7 +2465,7 @@ body[data-state="ready"] .reveal {
   animation: cur-note-in 0.45s var(--ease-cinema) both;
 }
 @keyframes cur-note-in {
-  from { opacity: 0; transform: translateY(6px); filter: blur(3px); }
+  from { opacity: 0; transform: translateY(-4px); filter: blur(3px); }
   to { opacity: 1; transform: none; filter: none; }
 }
 
@@ -2716,7 +2742,7 @@ body[data-state="ready"] .reveal {
   animation: final-thought-in 0.35s var(--ease-cinema) both;
 }
 @keyframes final-thought-in {
-  from { opacity: 0; transform: translateY(6px); filter: blur(3px); }
+  from { opacity: 0; transform: translateY(-4px); filter: blur(3px); }
   to { opacity: 1; transform: none; filter: none; }
 }
 
@@ -2843,12 +2869,16 @@ body[data-state="ready"] .reveal {
   /* one shared entrance curve — long glides read as lag on phones */
   .reveal-scroll { --dur: 0.7s; --blur-in: 10px; }
   .reveal-tempo-slow { --dur: 0.9s; }
-  /* deck glide pinned to center on phones: phase flips at viewport
-     fractions feel like jitter at this width — rest state only */
+  /* deck + section glides pinned to center on phones: phase flips at
+     viewport fractions feel like jitter at this width — rest only */
   .vibe-stage,
   .vibe-stage.vp-below,
   .vibe-stage.vp-above,
-  .vibe-stage.vp-center {
+  .vibe-stage.vp-center,
+  .scene-root,
+  .scene-root.vp-below,
+  .scene-root.vp-above,
+  .scene-root.vp-center {
     translate: 0 0;
     opacity: 1;
     filter: none;
