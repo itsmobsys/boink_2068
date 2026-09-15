@@ -41,7 +41,7 @@ export default function RootLayout({ children }) {
     <html lang="en" className={`${display.variable} ${body.variable} ${mono.variable}`}>
       <body>
         <noscript>
-          <style>{`.bg{opacity:1}.reveal{opacity:1}.hero__boot{display:none}.reveal-scroll{opacity:1;transform:none;filter:none}.reveal-scroll:not(.is-visible) .thing,.reveal-scroll:not(.is-visible) .cur-state{opacity:1}.cur-states::before{transform:none}.hero__skill{opacity:1}.about__inner,.vibe__inner,.things__inner,.currently__inner,.final__inner{border-top-color:var(--line-soft)}`}</style>
+          <style>{`.bg{opacity:1}.reveal{opacity:1}.hero__boot{display:none}.reveal-scroll{opacity:1;transform:none;filter:none}.reveal-scroll:not(.is-visible) .thing,.reveal-scroll:not(.is-visible) .cur-state{opacity:1}.reveal-scroll:not(.is-visible) .vibe-source__line,.reveal-scroll:not(.is-visible) .vibe-deck__wire,.reveal-scroll:not(.is-visible) .vibe-compile{opacity:1}.cur-states::before{transform:none}.hero__skill{opacity:1}.about__inner,.vibe__inner,.things__inner,.currently__inner,.final__inner{border-top-color:var(--line-soft)}`}</style>
         </noscript>
         {children}
       </body>

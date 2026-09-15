@@ -46,13 +46,61 @@ export function observeReveal(el) {
 
 /* Scene continuity — one observer for hero + all sections.
    Each [data-scene] element reports two independent states:
+   Each [data-scene] element reports two independent states:
    - is-inview: entered the viewport at least once (sticky; drives
      hairline draws and other arrival continuity, never removed)
    - is-past: currently sitting fully above the viewport (live; drives
      the extremely subtle exit dimming, removed on return)
    The hero additionally publishes body[data-scene] so the background
    lighting can quietly lose intensity once the first scene is past. */
-let sceneIO = null;
+/* Viewport phases — continuous-feel scroll motion for the Vibe deck.
+   A THIRD shared observer (still no scroll listeners, no libraries).
+   Each watched pane is classified every crossing from its live rect:
+   - vp-below  entering: approaching from below the fold
+   - vp-center near the viewport center: full presence
+   - vp-above  leaving: drifting past above the fold
+   CSS transitions (long, eased) interpolate between phases, so normal
+   scrolling reads as one continuous glide rather than stepped states.
+   Threshold steps give regular updates mid-scroll; the rect math (not
+   the ratios) decides the phase, with a 2px grace matching the scene
+   observer so fractional glide settles can't stick between states. */
+let phaseIO = null;
+const PHASE_STATES = ["vp-below", "vp-center", "vp-above"];
+
+function phaseFor(rect) {
+  const vh = window.innerHeight || 800;
+  if (rect.bottom < vh * 0.35) return "vp-above";
+  if (rect.top > vh * 0.65) return "vp-below";
+  return "vp-center";
+}
+
+export function observeViewportPhase(el) {
+  if (!el || typeof el.classList === "undefined") return () => {};
+  if (prefersReducedMotion()) {
+    // Reduced motion: rest at full presence, no observation needed.
+    el.classList.add("vp-center");
+    return () => {};
+  }
+  if (!phaseIO) {
+    phaseIO = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const t = entry.target;
+          const phase = phaseFor(entry.boundingClientRect);
+          for (const s of PHASE_STATES) {
+            if (s === phase) t.classList.add(s);
+            else t.classList.remove(s);
+          }
+        }
+      },
+      { threshold: [0, 0.25, 0.5, 0.75, 1] }
+    );
+  }
+  phaseIO.observe(el);
+  return () => {
+    if (phaseIO) phaseIO.unobserve(el);
+  };
+}
 
 export function observeScene(el) {
   if (!el || typeof el.dataset === "undefined") return () => {};
