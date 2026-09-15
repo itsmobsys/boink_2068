@@ -62,12 +62,16 @@ export function observeScene(el) {
     el.classList.add("is-inview");
     return () => {};
   }
-  const name = el.dataset.scene || "";
   if (!sceneIO) {
+    // Top inset of 2px: smooth scrollIntoView glides settle on
+    // fractional pixels (bottom: 0.14) — still "intersecting", so no
+    // exit crossing would ever fire. The inset makes ≤2px slivers count
+    // as exited (generating the crossing) and the matching tolerance
+    // below confirms them as past. Entry behavior is unchanged.
     sceneIO = new IntersectionObserver((entries) => {
       for (const entry of entries) {
         const t = entry.target;
-        const past = entry.boundingClientRect.bottom <= 0;
+        const past = entry.boundingClientRect.bottom <= 2;
         if (past) {
           t.classList.add("is-past");
         } else {
@@ -78,7 +82,7 @@ export function observeScene(el) {
           document.body.dataset.scene = past ? "beyond" : "hero";
         }
       }
-    }, { threshold: 0 });
+    }, { threshold: 0, rootMargin: "-2px 0px 0px 0px" });
   }
   sceneIO.observe(el);
   return () => {

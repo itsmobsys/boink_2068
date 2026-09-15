@@ -43,9 +43,9 @@ In Discord: Server Settings → Widget → **Server ID** (you do not need to ena
 ## 5. Test
 
 ```sh
-# health (public)
+# health (public, no auth)
 curl https://<bridge>/health
-# → {"ok":true}
+# → {"ok":true,"service":"discord-presence-bridge"}
 
 # presence without secret (must fail)
 curl https://<bridge>/presence
@@ -66,6 +66,31 @@ npm install
 npm start              # validates env, serves HTTP, connects Gateway
 npm test               # pure + HTTP tests, no Discord connection needed
 ```
+
+There is intentionally no `npm run build` — this is a plain Node.js
+service, not a bundled app. `npm install` + `npm start` is the whole
+pipeline.
+
+## 7. Deploy on Render
+
+This repo has no `render.yaml`; configure the dashboard service once:
+
+- **Root Directory:** `discord-presence-bridge` (monorepo subdirectory)
+- **Build Command:** `npm install` (NOT `npm run build` — no build script exists by design)
+- **Start Command:** `npm start` (runs `node src/index.js`)
+- **Health Check Path:** `/health`
+- Environment → add `DISCORD_BOT_TOKEN`, `DISCORD_USER_ID`, `DISCORD_GUILD_ID`, `PRESENCE_SHARED_SECRET` (same values as §3 step 4; Render injects `PORT` itself and the server binds `0.0.0.0`).
+
+## 8. Keep warm (external ping)
+
+Render's free tier sleeps idle services. `GET /health` exists for
+exactly this: point any external uptime/cron service at
+`https://<bridge>/health` every few minutes.
+
+- HTTP 200 + `{"ok":true,"service":"discord-presence-bridge"}` means the Node process is alive.
+- No authentication, responds instantly, never touches the Discord Gateway.
+- Returns nothing sensitive: no token, no secret, no user/guild IDs, no presence data.
+- There is deliberately no internal `setInterval()` self-ping — keep-alive is the pinger's job, not the bridge's.
 
 ## Design notes
 

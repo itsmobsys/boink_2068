@@ -13,7 +13,10 @@ import { observeScene } from "./motion";
 export default function SceneContinuity() {
   useEffect(() => {
     const cleanups = [];
-    const nodes = document.querySelectorAll("[data-scene]");
+    // Landmarks only — never `body`: the hero publishes
+    // body[data-scene], so a bare [data-scene] selector would observe
+    // the body itself on remount and fight the hero signal.
+    const nodes = document.querySelectorAll("main[data-scene], section[data-scene]");
     nodes.forEach((el) => cleanups.push(observeScene(el)));
     return () => {
       for (const fn of cleanups) fn();

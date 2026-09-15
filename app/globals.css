@@ -452,6 +452,8 @@ body[data-state="ready"] .hero__boot { opacity: 0; }
    border, small mono text; per-chip color lives ONLY in the 5px dot
    (via --dot) plus a whisper of glow on hover. Non-interactive. */
 .hero__skills {
+  --chip-x: -12px;
+  --chip-stagger: 0.035s;
   margin-top: 18px;
   display: flex;
   flex-wrap: wrap;
@@ -475,10 +477,23 @@ body[data-state="ready"] .hero__boot { opacity: 0; }
   border: 1px solid var(--line-soft);
   border-radius: 999px;
   padding: 3px 10px 3px 9px;
+  opacity: 0;
   transition:
     border-color 0.25s ease,
     color 0.25s ease,
-    transform 0.25s var(--ease-cinema);
+    translate 0.25s var(--ease-cinema);
+}
+/* staggered cascade on the Hero boot gate (metadata 0.86s → chips
+   from 0.98s): 16 chips × 35ms = 525ms span + 150ms settle = 675ms
+   total. `both` fill holds the rested state; hover lift uses the
+   independent `translate` property so the fill never fights it. */
+body[data-state="ready"] .hero__skill {
+  animation: chip-in 0.15s var(--ease-cinema) both;
+  animation-delay: calc(0.98s + (var(--i, 0) * var(--chip-stagger)));
+}
+@keyframes chip-in {
+  from { opacity: 0; transform: translateX(var(--chip-x)); filter: blur(3px); }
+  to { opacity: 1; transform: none; filter: none; }
 }
 .hero__skill i {
   width: 5px; height: 5px; border-radius: 50%;
@@ -486,10 +501,22 @@ body[data-state="ready"] .hero__boot { opacity: 0; }
   opacity: 0.85;
   transition: opacity 0.25s ease, box-shadow 0.25s ease;
 }
+/* dots softly brighten as their chip lands, then rest at the subtle
+   base state. `backwards` fill touches only the pre-start delay, so
+   the resting base (and hover below) always win afterward. */
+body[data-state="ready"] .hero__skill i {
+  animation: chip-dot 0.5s ease backwards;
+  animation-delay: calc(0.98s + (var(--i, 0) * var(--chip-stagger)));
+}
+@keyframes chip-dot {
+  0% { opacity: 0.4; box-shadow: none; }
+  40% { opacity: 1; box-shadow: 0 0 8px var(--dot, var(--accent)); }
+  100% { opacity: 0.85; box-shadow: none; }
+}
 .hero__skill:hover {
   border-color: var(--line);
   color: var(--text-dim);
-  transform: translateY(-1px);
+  translate: 0 -1px;
 }
 .hero__skill:hover i {
   opacity: 1;
@@ -577,7 +604,7 @@ body[data-state="ready"] .reveal {
 }
 @keyframes rise {
   from { opacity: 0; transform: translateY(20px); filter: blur(7px); }
-  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+  to { opacity: 1; transform: none; filter: none; }
 }
 
 /* ── 12. RESPONSIVE — intentionally designed, not shrunk ───── */
@@ -598,6 +625,8 @@ body[data-state="ready"] .reveal {
     row-gap: 8px;
   }
   .hero__skills {
+    --chip-x: -7px;
+    --chip-stagger: 0.028s;
     margin-top: 16px;
     gap: 5px;
     max-width: 100%;
@@ -634,6 +663,10 @@ body[data-state="ready"] .reveal {
   .bg { opacity: 1; transition: none; }
   .reveal { opacity: 1; }
   body[data-state="ready"] .reveal { animation: none; }
+  /* skill chips: no movement, no blur, no stagger — immediately present */
+  .hero__skill { opacity: 1; }
+  body[data-state="ready"] .hero__skill,
+  body[data-state="ready"] .hero__skill i { animation: none; }
   .reveal-scroll {
     opacity: 1;
     transform: none;
@@ -967,7 +1000,7 @@ body[data-state="ready"] .reveal {
 .reveal-scroll.is-visible {
   opacity: 1;
   transform: none;
-  filter: blur(0);
+  filter: none;
   will-change: auto;
 }
 
@@ -1410,7 +1443,7 @@ body[data-state="ready"] .reveal {
 }
 @keyframes vibe-in {
   from { opacity: 0; transform: translateY(-12px); filter: blur(6px); }
-  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+  to { opacity: 1; transform: none; filter: none; }
 }
 
 .vibe-c__label {
@@ -1801,7 +1834,7 @@ body[data-state="ready"] .reveal {
 }
 @keyframes thing-in {
   from { opacity: 0; transform: translateX(var(--rx)) translateY(12px); filter: blur(8px) brightness(0.65); }
-  to { opacity: 1; transform: none; filter: blur(0) brightness(1); }
+  to { opacity: 1; transform: none; filter: none; }
 }
 
 /* ── the loop — minimal recurring-system diagram ── */
@@ -2089,7 +2122,7 @@ body[data-state="ready"] .reveal {
 }
 @keyframes cur-state-in {
   from { opacity: 0; transform: translateX(var(--rx)) translateY(8px); filter: blur(6px); }
-  to { opacity: 1; transform: none; filter: blur(0); }
+  to { opacity: 1; transform: none; filter: none; }
 }
 .cur-state {
   position: relative;
@@ -2209,7 +2242,7 @@ body[data-state="ready"] .reveal {
 }
 @keyframes cur-note-in {
   from { opacity: 0; transform: translateY(6px); filter: blur(3px); }
-  to { opacity: 1; transform: none; filter: blur(0); }
+  to { opacity: 1; transform: none; filter: none; }
 }
 
 /* ── tiny closing loop ── */
@@ -2478,7 +2511,7 @@ body[data-state="ready"] .reveal {
 }
 @keyframes final-thought-in {
   from { opacity: 0; transform: translateY(6px); filter: blur(3px); }
-  to { opacity: 1; transform: none; filter: blur(0); }
+  to { opacity: 1; transform: none; filter: none; }
 }
 
 /* ── one loop, end to beginning ── */
@@ -2538,8 +2571,11 @@ body[data-state="ready"] .reveal {
   opacity: 0.75;
 }
 
-/* anchor return respects motion preferences */
-html { scroll-behavior: smooth; }
+/* anchor return glides — motion-capable users only, so this rule can
+   never override the reduced-motion `auto` below regardless of order */
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
 
 /* ── final responsive ── */
 @media (max-width: 640px) {

@@ -31,8 +31,12 @@ export function createServer({ getPresence, secret, logger = () => {} }) {
     }
 
     if (pathname === "/health") {
+      // Liveness only: static payload, no Gateway touch, no secrets.
+      // External uptime/cron services may ping this freely to keep
+      // the host warm. Nothing identifying leaks here — the service
+      // name is public by design (it appears in the repo already).
       logger("[http] GET /health 200");
-      send(200, { ok: true });
+      send(200, { ok: true, service: "discord-presence-bridge" });
       return;
     }
 

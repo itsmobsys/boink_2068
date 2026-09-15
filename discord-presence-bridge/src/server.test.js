@@ -30,10 +30,10 @@ async function get(path, secret = null) {
 }
 
 describe("bridge HTTP", () => {
-  it("GET /health → 200 {ok:true} without auth", async () => {
+  it("GET /health → 200 {ok,service} without auth", async () => {
     const { status, json } = await get("/health");
     assert.equal(status, 200);
-    assert.deepEqual(json, { ok: true });
+    assert.deepEqual(json, { ok: true, service: "discord-presence-bridge" });
   });
 
   it("GET /presence without secret → 401", async () => {
