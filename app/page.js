@@ -1,9 +1,10 @@
 import About from "@/components/About";
 import Hero from "@/components/Hero";
+import ThingsIDo from "@/components/ThingsIDo";
 import Vibe from "@/components/Vibe";
 import { getProfile } from "@/lib/profile";
 
-/* STEPS 1–3 — hero viewport, About section, Vibe compiler.
+/* STEPS 1–4 — hero viewport, About, Vibe compiler, Things I Do.
    Server component: resolves profile (placeholder today, Discord
    server fetch later) and hands slices to each section as props. */
 export default async function Page() {
@@ -12,6 +13,7 @@ export default async function Page() {
     <Hero profile={profile}>
       <About about={profile.about} />
       <Vibe vibe={profile.vibe} />
+      <ThingsIDo things={profile.things} />
     </Hero>
   );
 }

@@ -541,6 +541,8 @@ body[data-state="ready"] .reveal {
   .vibe-stage[data-phase="compiled"] .vibe-c__block { animation: none; }
   .vibe-source { transition: none; }
   .vibe-stage[data-phase="compiled"] .vibe-source { opacity: 0.75; }
+  /* things: entries appear immediately, hover responses go instant */
+  .reveal-scroll.is-visible .thing { animation: none; }
   .cursor { display: none !important; }
 }
 
@@ -1346,4 +1348,334 @@ body[data-state="ready"] .reveal {
 @media (min-width: 1900px) {
   .vibe__inner { max-width: 1240px; }
   .vibe__title { font-size: 4.4rem; }
+}
+
+/* ── 16. THINGS I DO — editorial index of recurring behaviors ── */
+.things {
+  position: relative;
+  z-index: 1;
+  padding: clamp(48px, 7vh, 96px) 24px clamp(130px, 17vh, 210px);
+}
+
+.things__inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  border-top: 1px solid var(--line-soft);
+  padding-top: clamp(56px, 7vh, 88px);
+}
+
+.things__head {
+  max-width: 640px;
+}
+
+.things__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+.things__eyebrow-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 80%, transparent);
+}
+
+.things__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(2.4rem, 3vw + 1.6rem, 3.9rem);
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  background: linear-gradient(180deg, #ffffff 20%, #d7d7e0 75%, #a9a9b6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-wrap: balance;
+  filter: drop-shadow(0 12px 40px rgba(0, 0, 0, 0.45));
+}
+
+.things__intro {
+  margin-top: 22px;
+  font-size: 15.5px;
+  line-height: 1.78;
+  color: var(--muted);
+  max-width: 56ch;
+  text-wrap: pretty;
+}
+
+/* ── the continuous sequence ── */
+.things__reveal {
+  margin-top: clamp(48px, 6vh, 72px);
+}
+
+.things__list {
+  list-style: none;
+}
+
+.thing {
+  position: relative;
+  display: grid;
+  grid-template-columns: 72px 1fr 20px;
+  gap: clamp(16px, 3vw, 32px);
+  align-items: start;
+  padding: clamp(26px, 3.5vh, 38px) clamp(4px, 1vw, 12px);
+  border-top: 1px solid var(--line-soft);
+  outline: none;
+  transition:
+    background 0.25s ease,
+    border-color 0.25s ease;
+}
+.things__list .thing:last-child {
+  border-bottom: 1px solid var(--line-soft);
+}
+
+/* accent bar — grows in on hover / focus */
+.thing__bar {
+  position: absolute;
+  left: -1px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, transparent, var(--accent), transparent);
+  opacity: 0;
+  transform: scaleY(0.3);
+  transition: opacity 0.25s ease, transform 0.3s var(--ease-cinema);
+}
+
+.thing__index {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  color: var(--faint);
+  padding-top: 6px;
+  transition: color 0.25s ease, transform 0.3s var(--ease-cinema);
+}
+
+.thing__label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin-bottom: 12px;
+  transition: color 0.25s ease;
+}
+
+.thing__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(1.45rem, 1.4vw + 1rem, 2.05rem);
+  letter-spacing: -0.025em;
+  line-height: 1.12;
+  color: var(--text);
+  text-wrap: balance;
+  transition: transform 0.3s var(--ease-cinema);
+}
+
+.thing__description {
+  margin-top: 12px;
+  font-size: 14.5px;
+  line-height: 1.75;
+  color: var(--muted);
+  max-width: 62ch;
+  text-wrap: pretty;
+  transition: color 0.25s ease;
+}
+
+.thing__detail {
+  margin-top: 14px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--faint);
+  opacity: 0.8;
+  transition: color 0.25s ease, opacity 0.25s ease;
+}
+
+.thing__marker {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  margin-top: 10px;
+  justify-self: end;
+  border: 1px solid var(--line);
+  background: transparent;
+  transition:
+    background 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+/* hover / keyboard-focus / touch-active — one restrained response */
+.thing:hover,
+.thing:focus-visible,
+.thing:active {
+  background:
+    radial-gradient(50% 120% at 12% 50%, color-mix(in srgb, var(--accent) 6%, transparent), transparent 70%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018), transparent 55%);
+  border-top-color: var(--line);
+}
+.thing:hover .thing__bar,
+.thing:focus-visible .thing__bar,
+.thing:active .thing__bar {
+  opacity: 1;
+  transform: scaleY(1);
+}
+.thing:hover .thing__index,
+.thing:focus-visible .thing__index,
+.thing:active .thing__index {
+  color: color-mix(in srgb, var(--accent) 75%, white);
+  transform: translateX(4px);
+}
+.thing:hover .thing__label,
+.thing:focus-visible .thing__label,
+.thing:active .thing__label {
+  color: var(--muted);
+}
+.thing:hover .thing__title,
+.thing:focus-visible .thing__title,
+.thing:active .thing__title {
+  transform: translateX(6px);
+}
+.thing:hover .thing__description,
+.thing:focus-visible .thing__description,
+.thing:active .thing__description {
+  color: var(--text-dim);
+}
+.thing:hover .thing__detail,
+.thing:focus-visible .thing__detail,
+.thing:active .thing__detail {
+  color: color-mix(in srgb, var(--accent) 60%, white);
+  opacity: 1;
+}
+.thing:hover .thing__marker,
+.thing:focus-visible .thing__marker,
+.thing:active .thing__marker {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 70%, transparent);
+}
+
+/* progressive entrance — runs when the wrapping Reveal fires */
+.reveal-scroll.is-visible .thing {
+  animation: thing-in 0.8s var(--ease-cinema) both;
+  animation-delay: calc(var(--i, 0) * 0.06s);
+}
+@keyframes thing-in {
+  from { opacity: 0; transform: translateY(16px); filter: blur(5px); }
+  to { opacity: 1; transform: none; filter: blur(0); }
+}
+
+/* ── the loop — minimal recurring-system diagram ── */
+.things-loop {
+  margin-top: clamp(72px, 9vh, 120px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.things-loop__steps {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.things-loop__step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.things-loop__node {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  text-indent: 0.3em;
+  color: var(--text-dim);
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  padding: 10px 22px 10px 24px;
+  background: rgba(255, 255, 255, 0.014);
+  white-space: nowrap;
+}
+.things-loop__step:last-child .things-loop__node {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  color: color-mix(in srgb, var(--accent) 70%, white);
+}
+.things-loop__link {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1;
+  color: var(--faint);
+  padding: 9px 0;
+}
+.things-loop__link--return {
+  color: var(--accent);
+  font-size: 15px;
+  padding: 12px 0 0;
+}
+.things-loop__caption {
+  margin-top: 26px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+/* ── closing status line ── */
+.things__closing {
+  margin-top: clamp(56px, 7vh, 88px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  text-indent: 0.1em;
+  color: var(--muted);
+}
+.things__pulse {
+  flex: none;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 75%, transparent);
+  animation: vibe-blink 2.4s ease-in-out infinite;
+}
+
+/* ── things responsive ── */
+@media (max-width: 900px) {
+  .thing {
+    grid-template-columns: 56px 1fr 16px;
+  }
+  .thing__title { font-size: clamp(1.3rem, 5vw, 1.7rem); }
+}
+
+@media (max-width: 640px) {
+  .things { padding: 40px 20px 110px; }
+  .things__inner { padding-top: 48px; }
+  .things__eyebrow { margin-bottom: 18px; }
+  .things__title { font-size: clamp(2.1rem, 9vw, 2.9rem); }
+  .things__intro { font-size: 14.5px; }
+  .thing {
+    grid-template-columns: 44px 1fr;
+    padding: 24px 2px;
+  }
+  .thing__marker { display: none; }
+  .thing__description { font-size: 14px; }
+  .things-loop { margin-top: 64px; }
+}
+
+@media (min-width: 1900px) {
+  .things__inner { max-width: 1240px; }
+  .things__title { font-size: 4.4rem; }
 }
