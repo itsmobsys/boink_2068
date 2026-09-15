@@ -12,7 +12,7 @@ import HeroIdentity from "./HeroIdentity";
 import HeroMetadata from "./HeroMetadata";
 import ScrollIndicator from "./ScrollIndicator";
 
-export default function Hero({ profile }) {
+export default function Hero({ profile, children }) {
   // boot → found → ready. SSR renders "boot" visuals; effects upgrade.
   const [phase, setPhase] = useState("boot");
 
@@ -71,12 +71,12 @@ export default function Hero({ profile }) {
 
         <ScrollIndicator />
 
-        {/* hairline edge: suggests something below without building it */}
+        {/* hairline edge: suggests the section below */}
         <div className="hero__edge" aria-hidden="true" />
       </main>
 
-      {/* STEP 2+ SECTIONS WILL GO HERE (about / vibe / profile / timeline / socials / footer).
-          Intentionally left empty for now — do not add anything below the hero yet. */}
+      {/* Step 2+ sections compose here via children — page.js owns the order. */}
+      {children}
     </div>
   );
 }

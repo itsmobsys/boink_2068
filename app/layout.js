@@ -38,7 +38,7 @@ export default function RootLayout({ children }) {
     <html lang="en" className={`${display.variable} ${body.variable} ${mono.variable}`}>
       <body>
         <noscript>
-          <style>{`.bg{opacity:1}.reveal{opacity:1}.hero__boot{display:none}`}</style>
+          <style>{`.bg{opacity:1}.reveal{opacity:1}.hero__boot{display:none}.reveal-scroll{opacity:1;transform:none;filter:none}`}</style>
         </noscript>
         {children}
       </body>
