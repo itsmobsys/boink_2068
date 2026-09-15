@@ -5,9 +5,11 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "node --test lib/discord-token-store.test.mjs lib/discord-refresh.test.mjs"
   },
   "dependencies": {
+    "@upstash/redis": "^1.38.4",
     "next": "^16.3.5",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",

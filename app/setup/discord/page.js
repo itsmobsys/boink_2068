@@ -1,11 +1,11 @@
 /* /setup/discord — owner-only Discord setup (UNLINKED route).
    ───────────────────────────────────────────────────────────────
    No navigation points here; visitors never need it. Shows config
-   PRESENCE (never values), the exact steps to connect, and the
-   entry point. Rendered dynamically so env changes reflect without
-   a rebuild for this page alone. */
+   PRESENCE (never values): static env, persistent store state, and
+   where the runtime refresh token currently resolves from. Rendered
+   dynamically so env changes reflect without a rebuild. */
 
-import { isDiscordConfigured } from "@/lib/discord.js";
+import { getDiscordStatus } from "@/lib/discord.js";
 
 export const dynamic = "force-dynamic";
 
@@ -20,12 +20,13 @@ function Row({ ok, children }) {
   );
 }
 
+const SOURCE_LABEL = {
+  store: "persistent store (rotations save automatically)",
+  env: "DISCORD_REFRESH_TOKEN env seed (rotations need a store)",
+};
+
 export default async function DiscordSetupPage() {
-  const hasId = Boolean(process.env.DISCORD_CLIENT_ID);
-  const hasSecret = Boolean(process.env.DISCORD_CLIENT_SECRET);
-  const hasRedirect = Boolean(process.env.DISCORD_REDIRECT_URI);
-  const hasRefresh = Boolean(process.env.DISCORD_REFRESH_TOKEN);
-  const live = isDiscordConfigured();
+  const status = await getDiscordStatus();
 
   return (
     <main
@@ -44,23 +45,33 @@ export default async function DiscordSetupPage() {
       <p style={{ color: "#62626e", letterSpacing: "0.3em", fontSize: 11 }}>OWNER ONLY · UNLINKED ROUTE</p>
       <h1>Discord setup</h1>
       <p>
-        Status: <strong>{live ? "Connected (refresh token present)" : "Not connected"}</strong>
+        Status: <strong>{status.linked ? "Linked" : "Not linked"}</strong>
       </p>
       <ul>
-        <Row ok={hasId}>DISCORD_CLIENT_ID</Row>
-        <Row ok={hasSecret}>DISCORD_CLIENT_SECRET</Row>
-        <Row ok={hasRedirect}>DISCORD_REDIRECT_URI</Row>
-        <Row ok={hasRefresh}>DISCORD_REFRESH_TOKEN</Row>
+        <Row ok={status.hasClientId}>DISCORD_CLIENT_ID</Row>
+        <Row ok={status.hasClientSecret}>DISCORD_CLIENT_SECRET</Row>
+        <Row ok={status.hasRedirectUri}>DISCORD_REDIRECT_URI</Row>
+        <Row ok={status.storeAvailable}>Persistent token store (Upstash Redis)</Row>
       </ul>
+      <p>
+        Refresh token source:{" "}
+        <strong>{status.tokenSource ? SOURCE_LABEL[status.tokenSource] : "none — authorize below"}</strong>
+      </p>
       <ol>
         <li>Create an application at discord.com/developers, add an OAuth2 redirect to your DISCORD_REDIRECT_URI.</li>
-        <li>Set the four variables above (Vercel → Settings → Environment Variables), then redeploy.</li>
+        <li>Set the static variables above (Vercel → Settings → Environment Variables), then redeploy.</li>
+        <li>
+          For automatic rotation handling, attach an Upstash Redis database (Vercel Marketplace) so
+          UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN are set — no code changes needed.
+        </li>
         <li>
           <a href="/api/auth/discord" style={{ color: "#8b8cff" }}>
             Authorize with Discord
           </a>{" "}
-          (identify scope only) and save the shown refresh token.
+          (identify scope only). With a store configured the token saves itself; otherwise save the
+          shown token as DISCORD_REFRESH_TOKEN.
         </li>
+        <li>If the refresh token is ever revoked (status falls back), authorize again once — the store reseeds.</li>
       </ol>
       <p>
         <a href="/" style={{ color: "#8b8cff" }}>
