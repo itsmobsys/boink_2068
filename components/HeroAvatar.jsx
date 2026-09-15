@@ -6,7 +6,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-export default function HeroAvatar({ displayName, avatarUrl }) {
+export default function HeroAvatar({ displayName, avatarUrl, presence }) {
   const wrapRef = useRef(null);
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -14,6 +14,9 @@ export default function HeroAvatar({ displayName, avatarUrl }) {
   const showImg = Boolean(avatarUrl) && !failed;
   // Monogram fallback: first letter of the live (or fallback) name.
   const monogram = ((displayName || "—").trim().charAt(0) || "—").toUpperCase();
+  // Live Gateway status; UNAVAILABLE when the bridge can't vouch.
+  const status = presence?.status || "unavailable";
+  const statusName = presence?.longLabel || "Status unavailable";
 
   useEffect(() => {
     const wrap = wrapRef.current;
@@ -104,9 +107,11 @@ export default function HeroAvatar({ displayName, avatarUrl }) {
         </div>
       </div>
 
-      {/* presence dot: decorative until a future presence layer lands */}
-      <div className="hero-avatar__presence" title="Discord presence">
-        <span className="hero-avatar__presence-dot" />
+      {/* live presence dot: color follows the Gateway state, the
+          metadata row below carries the text so color is never the
+          only signal */}
+      <div className="hero-avatar__presence" data-status={status} title={`Discord status: ${statusName}`}>
+        <span className="hero-avatar__presence-dot" data-status={status} aria-hidden="true" />
       </div>
     </div>
   );

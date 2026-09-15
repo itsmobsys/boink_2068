@@ -305,7 +305,8 @@ body[data-state="ready"] .hero__boot { opacity: 0; }
   pointer-events: none;
 }
 
-/* presence — grey = unknown until gateway is wired */
+/* presence — live Gateway state drives the dot; the metadata row
+   beside it always carries the text, so color is never the signal */
 .hero-avatar__presence {
   position: absolute;
   right: 10px; bottom: 10px;
@@ -318,6 +319,27 @@ body[data-state="ready"] .hero__boot { opacity: 0; }
   width: 12px; height: 12px; border-radius: 50%;
   background: #55555f;
   box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.04);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+.hero-avatar__presence-dot[data-status="online"] {
+  background: var(--accent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 70%, transparent);
+}
+.hero-avatar__presence-dot[data-status="idle"] {
+  background: #d9a13b;
+  box-shadow: 0 0 10px rgba(217, 161, 59, 0.45);
+}
+.hero-avatar__presence-dot[data-status="dnd"] {
+  background: #e5484d;
+  box-shadow: 0 0 10px rgba(229, 72, 77, 0.45);
+}
+.hero-avatar__presence-dot[data-status="offline"] {
+  background: #55555f;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.04);
+}
+.hero-avatar__presence-dot[data-status="unavailable"] {
+  background: #34343e;
+  box-shadow: none;
 }
 
 /* ── 7. IDENTITY TYPOGRAPHY ────────────────────────────────── */
@@ -388,6 +410,31 @@ body[data-state="ready"] .hero__boot { opacity: 0; }
   background: var(--accent);
   box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 80%, transparent);
   opacity: 0.9;
+}
+/* live presence label: same dot language, status-driven color */
+.hero__meta-item--presence i {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: #34343e;
+  opacity: 0.9;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+.hero__meta-item--presence[data-status="online"] i {
+  background: var(--accent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 80%, transparent);
+}
+.hero__meta-item--presence[data-status="idle"] i {
+  background: #d9a13b;
+  box-shadow: 0 0 8px rgba(217, 161, 59, 0.5);
+}
+.hero__meta-item--presence[data-status="dnd"] i {
+  background: #e5484d;
+  box-shadow: 0 0 8px rgba(229, 72, 77, 0.5);
+}
+.hero__meta-item--presence[data-status="offline"] i {
+  background: #55555f;
+}
+.hero__meta-item--presence[data-status="unavailable"] i {
+  background: #34343e;
 }
 .hero__meta-sep { opacity: 0.4; }
 

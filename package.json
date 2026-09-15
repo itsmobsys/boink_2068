@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --test lib/discord-token-store.test.mjs lib/discord-refresh.test.mjs"
+    "test": "node --test lib/discord-token-store.test.mjs lib/discord-refresh.test.mjs lib/discord-presence.test.mjs"
   },
   "dependencies": {
     "@upstash/redis": "^1.38.4",

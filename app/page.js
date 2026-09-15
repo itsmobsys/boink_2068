@@ -11,9 +11,12 @@ import { getProfile } from "@/lib/profile";
    component: resolves profile (live Discord identity merged with
    site-owned content) and hands slices to each section as props. */
 
-/* ISR: Discord is re-read at most hourly — a handful of API calls
-   per day, never per visitor. Editorial edits redeploy as usual. */
-export const revalidate = 3600;
+/* ISR: the shell revalidates every 60s so the live presence dot
+   stays fresh. Cost stays tiny regardless: the OAuth identity keeps
+   its own ~1h in-memory cache and the bridge has a 60s module cache
+   with dedup — neither Discord nor the bridge sees per-visitor
+   traffic. Editorial edits redeploy as usual. */
+export const revalidate = 60;
 
 /* Share metadata uses the live Discord avatar (absolute CDN URL).
    Invisible change — no visual redesign. */

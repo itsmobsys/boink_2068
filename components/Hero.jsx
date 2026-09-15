@@ -59,7 +59,11 @@ export default function Hero({ profile, children }) {
           <span className="hero__label-line" aria-hidden="true" />
         </div>
 
-        <HeroAvatar displayName={profile.displayName} avatarUrl={profile.avatarUrl} />
+        <HeroAvatar
+          displayName={profile.displayName}
+          avatarUrl={profile.avatarUrl}
+          presence={profile.presence}
+        />
 
         <HeroIdentity
           displayName={profile.displayName}
@@ -67,7 +71,11 @@ export default function Hero({ profile, children }) {
           personalLine={profile.personalLine}
         />
 
-        <HeroMetadata metaAccount={profile.metaAccount} metaBadges={profile.metaBadges} />
+        <HeroMetadata
+          metaAccount={profile.metaAccount}
+          metaBadges={profile.metaBadges}
+          presence={profile.presence}
+        />
 
         <ScrollIndicator />
 
