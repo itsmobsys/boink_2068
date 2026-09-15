@@ -1496,22 +1496,66 @@ body[data-state="ready"] .reveal {
   color: var(--faint);
 }
 
-.vibe-c__block { margin-bottom: 30px; }
-.vibe-c__block:last-child { margin-bottom: 4px; }
+.vibe-c__block {
+  margin-bottom: 30px;
+}
+
+.vibe-c__block:last-child {
+  margin-bottom: 4px;
+}
+
+/* ── compiled output entrance ────────────────────────────────
+   The compiled view remounts when compilation finishes.
+   Blocks resolve top → down using the existing --i index.
+   No extra JS, no new classes, no animation stacking. */
+.vibe-stage[data-phase="compiled"] .vibe-c__block {
+  animation: vibe-output-in 0.38s var(--ease-cinema) both;
+  animation-delay: calc(var(--i, 0) * 0.075s);
+  will-change: opacity, transform, filter;
+}
+
+@keyframes vibe-output-in {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+    filter: blur(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+/* Interests get their own smaller stagger after the block arrives. */
+.vibe-stage[data-phase="compiled"] .vibe-c__interest {
+  animation: vibe-interest-in 0.3s var(--ease-cinema) both;
+  animation-delay: calc(
+    0.42s + (var(--j, 0) * 0.04s)
+  );
+  will-change: opacity, transform, filter;
+}
+
+@keyframes vibe-interest-in {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+    filter: blur(3px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+    filter: blur(0);
+  }
+}
 
 /* entrance runs on mount, staggered per block — only in compiled phase.
    AI-writing rhythm: chunks resolve top → down, ~70ms apart, each
    settling in ~350ms so the full output lands in well under 2s.
    The compiled view remounts on every compile, so each run starts
    clean — animations can never stack. */
-.vibe-stage[data-phase="compiled"] .vibe-c__block {
-  animation: vibe-in 0.35s var(--ease-cinema) both;
-  animation-delay: calc(var(--i) * 0.065s);
-}
-@keyframes vibe-in {
-  from { opacity: 0; transform: translateY(-12px); filter: blur(6px); }
-  to { opacity: 1; transform: none; filter: none; }
-}
 
 .vibe-c__label {
   display: flex;
