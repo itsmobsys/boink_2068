@@ -1,0 +1,17 @@
+# dependencies
+/node_modules
+
+# next.js
+/.next/
+/out/
+
+# vercel
+.vercel
+
+# env (local secrets — never commit)
+.env*.local
+.env
+
+# system
+.DS_Store
+Thumbs.db
