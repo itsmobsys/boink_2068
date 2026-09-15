@@ -7,6 +7,7 @@
    No animation library, no loops, no polling. */
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { observeViewportPhase } from "./motion";
 import Reveal from "./Reveal";
 import VibeCompiled from "./VibeCompiled";
 import VibeSource from "./VibeSource";
@@ -46,11 +47,23 @@ export default function VibeCompiler({ vibe }) {
     setPhase("raw");
   }, []);
 
+  /* Continuous-feel scroll glide for the deck (motion.js viewport
+     phases): the whole stage drifts a few px and softens as it
+     approaches center, settles crisp at rest. One observer, three
+     panes — the deck reads as a single chassis, never stepped. */
+  const stageRef = useRef(null);
+  useEffect(() => observeViewportPhase(stageRef.current), []);
+
   const isCompiled = phase === "compiled";
   const isCompiling = phase === "compiling";
 
   return (
-    <div className="vibe-stage" data-phase={phase}>
+    <div
+      ref={stageRef}
+      className="vibe-stage"
+      data-phase={phase}
+      data-motion="viewport-phase"
+    >
       <div className="vibe-deck">
         {/* status bar — the visual anchor that reacts to compilation */}
         <Reveal shift="eyebrow">

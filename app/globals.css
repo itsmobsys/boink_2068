@@ -23,6 +23,7 @@
 
   --avatar: clamp(152px, 19vw, 200px);
   --ease-cinema: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-glide: cubic-bezier(0.19, 1, 0.22, 1);
 
   --font-display: var(--next-display, "Inter Tight", "Inter", -apple-system, "Segoe UI", sans-serif);
   --font-body: var(--next-body, "Inter", -apple-system, "Segoe UI", sans-serif);
@@ -46,11 +47,19 @@ body {
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  -webkit-tap-highlight-color: transparent;
   overflow-x: hidden;
   /* step 2: hero flows into about — page scrolls as one experience */
 }
 
 ::selection { background: color-mix(in srgb, var(--accent) 32%, transparent); color: #fff; }
+
+/* quiet dark scrollbar — Firefox gets scrollbar-width/color on html,
+   WebKit gets the pseudo-element pair; same visual language */
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #23232c; border-radius: 8px; border: 2px solid var(--bg); }
+::-webkit-scrollbar-thumb:hover { background: #2e2e3a; }
 
 img { display: block; max-width: 100%; }
 
@@ -488,7 +497,7 @@ body[data-state="ready"] .hero__boot { opacity: 0; }
    total. `both` fill holds the rested state; hover lift uses the
    independent `translate` property so the fill never fights it. */
 body[data-state="ready"] .hero__skill {
-  animation: chip-in 0.15s var(--ease-cinema) both;
+  animation: chip-in 0.32s var(--ease-glide) both;
   animation-delay: calc(0.98s + (var(--i, 0) * var(--chip-stagger)));
 }
 @keyframes chip-in {
@@ -598,13 +607,20 @@ body[data-state="ready"] .hero__skill i {
 
 /* ── 11. CINEMATIC REVEAL ──────────────────────────────────── */
 .reveal { opacity: 0; }
+/* fill: backwards (not both) + an explicit base opacity: 1 means the
+   element resolves to its OWN base styles when the entrance ends —
+   so headings that carry a permanent drop-shadow keep it (a `both`
+   fill ending at filter: none was flattening those shadows away). */
 body[data-state="ready"] .reveal {
-  animation: rise 1.15s var(--ease-cinema) both;
+  opacity: 1;
+  animation: rise 1.25s var(--ease-glide) backwards;
   animation-delay: var(--d, 0s);
 }
+/* `from`-only keyframes: the implicit `to` keyframe resolves to each
+   element's computed base style, so blur dissolves into whatever the
+   element actually rests with — including its permanent shadow. */
 @keyframes rise {
-  from { opacity: 0; transform: translateY(20px); filter: blur(7px); }
-  to { opacity: 1; transform: none; filter: none; }
+  from { opacity: 0; transform: translate3d(-16px, 22px, 0); filter: blur(9px); }
 }
 
 /* ── 12. RESPONSIVE — intentionally designed, not shrunk ───── */
@@ -662,12 +678,17 @@ body[data-state="ready"] .reveal {
   .hero__skill { opacity: 1; }
   body[data-state="ready"] .hero__skill,
   body[data-state="ready"] .hero__skill i { animation: none; }
+  /* !important below: section styles re-declare these same properties
+     at equal specificity LATER in the file — reduced motion must win
+     the cascade regardless of source order */
   .reveal-scroll {
-    opacity: 1;
-    transform: none;
-    filter: none;
-    transition: none;
-    transition-delay: 0s;
+    --blur-in: 0px;
+    opacity: 1 !important;
+    transform: translate3d(0, 0, 0) !important;
+    filter: blur(0) !important;
+    transition: none !important;
+    transition-delay: 0s !important;
+    will-change: auto;
   }
   .reveal-scroll.is-visible .about-visual__sweep { animation: none; }
   .about-visual__sweep { display: none; }
@@ -683,40 +704,48 @@ body[data-state="ready"] .reveal {
     border-top-color: var(--line-soft);
     opacity: 1;
     transform: none;
-    transition: none;
+    transition: none !important;
   }
   .scene.is-past .about__inner,
   .scene.is-past .vibe__inner,
   .scene.is-past .things__inner,
   .scene.is-past .currently__inner,
   .scene.is-past .final__inner {
-    opacity: 1;
-    transform: none;
+    opacity: 1 !important;
+    transform: none !important;
   }
   body[data-scene="beyond"] .bg__core-light { opacity: 1; }
   body[data-scene="beyond"] .bg__accent-wash { opacity: 0.8; }
   body[data-scene="beyond"] .bg__avatar-halo { opacity: 1; }
   .bg__core-light, .bg__accent-wash, .bg__avatar-halo { transition: none; }
   .scene.is-past .about-visual__plate::before,
-  .scene.is-past .final-mark__halo { transform: none; }
-  .about-visual__plate::before, .final-mark__halo { transition: none; }
+  .scene.is-past .final-mark__halo { transform: none !important; }
+  .about-visual__plate::before, .final-mark__halo { transition: none !important; }
   /* streams: entries appear immediately, no stagger waits */
   .reveal-scroll:not(.is-visible) .thing,
-  .reveal-scroll:not(.is-visible) .cur-state { opacity: 1; }
+  .reveal-scroll:not(.is-visible) .cur-state { opacity: 1 !important; }
   .reveal-scroll.is-visible .thing,
-  .reveal-scroll.is-visible .cur-state { animation: none; }
+  .reveal-scroll.is-visible .cur-state { animation: none !important; }
   .thing, .cur-state { animation-delay: 0s !important; }
-  .cur-states::before { transform: none; transition: none; }
-  /* vibe: state changes apply instantly, no staggered waits */
-  /* deck entrance resolves instantly (output override needs the
-     explicit filter reset — it outranks the generic reveal rule) */
+  .cur-states::before { transform: none !important; transition: none !important; }
+  /* deck glide never drifts or softens for reduced-motion users */
+  .vibe-stage,
+  .vibe-stage.vp-below,
+  .vibe-stage.vp-above {
+    translate: 0 0 !important;
+    opacity: 1 !important;
+    filter: none !important;
+    transition: none !important;
+  }
+  /* vibe: state changes apply instantly, no staggered waits; the deck
+     entrance resolves instantly and the output pane lands crisp via
+     the shared reveal rule (--blur-in: 0 above) */
   .reveal-scroll:not(.is-visible) .vibe-source__line,
   .reveal-scroll:not(.is-visible) .vibe-deck__wire,
-  .reveal-scroll:not(.is-visible) .vibe-compile { opacity: 1; }
+  .reveal-scroll:not(.is-visible) .vibe-compile { opacity: 1 !important; }
   .reveal-scroll.is-visible .vibe-source__line,
   .reveal-scroll.is-visible .vibe-deck__wire,
-  .reveal-scroll.is-visible .vibe-compile { animation: none; }
-  .vibe-deck__grid > .reveal-scroll:last-child { filter: none; }
+  .reveal-scroll.is-visible .vibe-compile { animation: none !important; }
   .vibe-c__block,
   .vibe-source__line,
   .vibe-source__gutter,
@@ -724,11 +753,12 @@ body[data-state="ready"] .reveal {
     transition-delay: 0s !important;
     animation-delay: 0s !important;
   }
-  .vibe-stage[data-phase="compiled"] .vibe-c__block { animation: none; }
-  .vibe-source { transition: none; }
+  /* compiled output: full text immediately — no blur, no translate,
+     no stagger (covers blocks AND the per-interest sub-stagger) */
+  .vibe-stage[data-phase="compiled"] .vibe-c__block,
+  .vibe-stage[data-phase="compiled"] .vibe-c__interest { animation: none !important; }
+  .vibe-source { transition: none !important; }
   .vibe-stage[data-phase="compiled"] .vibe-source { opacity: 0.75; }
-  /* things: entries appear immediately, hover responses go instant */
-  .reveal-scroll.is-visible .thing { animation: none; }
   /* final: anchor returns jump instead of gliding */
   html { scroll-behavior: auto; }
   .cursor { display: none !important; }
@@ -990,37 +1020,47 @@ body[data-state="ready"] .reveal {
    and the .reveal-tempo-slow finale treatment. Resting states are
    completely stable: transitions end, will-change releases. */
 .reveal-scroll {
-  --rx: -55px;
-  --ry: 14px;
-  --dur: 0.6s;
+  --rx: -88px;
+  --ry: 18px;
+  --rx-end: 0px;
+  --ry-end: 0px;
+  --dur: 0.95s;
+  --blur-in: 18px;
   opacity: 0;
-  transform: translateX(var(--rx)) translateY(var(--ry));
-  filter: blur(10px);
+  transform: translate3d(var(--rx), var(--ry), 0);
+  filter: blur(var(--blur-in));
   transition:
-    opacity var(--dur) var(--ease-cinema),
-    transform var(--dur) var(--ease-cinema),
-    filter var(--dur) var(--ease-cinema);
+    opacity var(--dur) var(--ease-glide),
+    transform var(--dur) var(--ease-glide),
+    filter var(--dur) var(--ease-glide);
   transition-delay: var(--d, 0s);
   will-change: opacity, transform, filter;
 }
+/* One crisp settled state for every reveal: opacity 1 / translate 0 /
+   blur 0. The --rx-end / --ry-end escape hatches (0 by default) let
+   the deck panes overshoot instead of authoring new end states —
+   every variant still resolves through this exact rule, so nothing
+   can stay transformed or blurred after its entrance. */
 .reveal-scroll.is-visible {
   opacity: 1;
-  transform: none;
-  filter: none;
+  transform: translate3d(var(--rx-end), var(--ry-end), 0);
+  filter: blur(0);
   will-change: auto;
 }
 
 /* layered entrance depths — the parallax illusion, never excessive.
    Vertical travel stays secondary: the site reads horizontal + depth. */
-.reveal-shift-eyebrow { --rx: -20px; --ry: 6px; }
-.reveal-shift-heading { --rx: -40px; --ry: 10px; }
-.reveal-shift-content { --rx: -55px; --ry: 14px; }
-.reveal-shift-deep { --rx: -70px; --ry: 16px; }
-.reveal-shift-visual { --rx: -85px; --ry: 18px; }
+.reveal-shift-eyebrow { --rx: -34px; --ry: 7px; --blur-in: 10px; }
+.reveal-shift-heading { --rx: -62px; --ry: 12px; --blur-in: 16px; }
+.reveal-shift-content { --rx: -88px; --ry: 18px; --blur-in: 20px; }
+.reveal-shift-deep { --rx: -108px; --ry: 22px; --blur-in: 22px; }
+.reveal-shift-visual { --rx: -126px; --ry: 24px; --blur-in: 24px; }
 
-/* slow tempo — the final scene: longer settle, gentler blur, same
-   composition. Smaller travel is authored per element in Final.jsx. */
-.reveal-tempo-slow { --dur: 0.9s; filter: blur(6px); }
+/* slow tempo — the final scene: longer settle, softer ride, same
+   composition. Blur now resolves through the shared is-visible rule
+   (no more hard-coded filter: none losing to a higher-specificity
+   override — reduced motion always lands fully crisp). */
+.reveal-tempo-slow { --dur: 1.25s; --blur-in: 14px; }
 
 /* ── scene continuity (pairs with SceneContinuity.jsx) ──
    The page reads as one canvas: each section hairline draws itself
@@ -1051,8 +1091,8 @@ body[data-state="ready"] .reveal {
 .scene.is-past .things__inner,
 .scene.is-past .currently__inner,
 .scene.is-past .final__inner {
-  opacity: 0.93;
-  transform: translateY(-5px);
+  opacity: 0.88;
+  transform: translateY(-8px);
 }
 
 /* ── decorative micro-parallax (two-state, IO-driven) ──
@@ -1178,6 +1218,40 @@ body[data-state="ready"] .reveal {
     0 30px 80px -30px rgba(0, 0, 0, 0.8),
     0 0 0 1px rgba(255, 255, 255, 0.015);
 }
+
+/* deck reaction — the chassis breathes with the compile cycle */
+.vibe-deck {
+  transition: border-color 0.6s ease, box-shadow 0.6s ease;
+}
+.vibe-stage[data-phase="compiling"] .vibe-deck {
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--line-soft));
+  box-shadow:
+    0 30px 80px -30px rgba(0, 0, 0, 0.8),
+    0 0 0 1px rgba(255, 255, 255, 0.015),
+    0 0 72px -18px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.vibe-stage[data-phase="compiled"] .vibe-deck {
+  border-color: color-mix(in srgb, var(--accent) 13%, var(--line-soft));
+}
+
+/* viewport-phase glide — scroll continuity for the deck (classes set
+   by motion.js observeViewportPhase; one shared IO, no listeners).
+   Approach / leave states drift and soften a touch; center is the
+   one crisp resting state (opacity 1, no translate, no blur). The
+   drift rides the dedicated translate property so it can never fight
+   the deck grid's reveal transform. */
+.vibe-stage {
+  translate: 0 0;
+  opacity: 1;
+  filter: none;
+  transition:
+    translate 1s var(--ease-glide),
+    opacity 1s ease,
+    filter 1s ease;
+}
+.vibe-stage.vp-below { translate: 0 14px; opacity: 0.94; filter: blur(2px); }
+.vibe-stage.vp-above { translate: 0 -8px; opacity: 0.96; filter: blur(1px); }
+.vibe-stage.vp-center { translate: 0 0; opacity: 1; filter: none; }
 
 /* status bar — reacts to compilation */
 .vibe-deck__bar {
@@ -1315,12 +1389,17 @@ body[data-state="ready"] .reveal {
 /* compile pass: lines illuminate in sequence, then resolve */
 .vibe-stage[data-phase="compiled"] .vibe-source { opacity: 0.5; }
 .vibe-stage[data-phase="compiling"] .vibe-source__line {
-  background: rgba(255, 255, 255, 0.028);
+  background: rgba(255, 255, 255, 0.035);
   transition-delay: calc(var(--i) * 18ms);
 }
 .vibe-stage[data-phase="compiling"] .vibe-source__gutter {
   color: var(--accent);
   opacity: 1;
+  text-shadow: 0 0 8px color-mix(in srgb, var(--accent) 60%, transparent);
+  transition-delay: calc(var(--i) * 18ms);
+}
+.vibe-stage[data-phase="compiling"] .vibe-source__key {
+  color: var(--text-dim);
   transition-delay: calc(var(--i) * 18ms);
 }
 .vibe-stage[data-phase="compiling"] .vibe-source__str {
@@ -1383,11 +1462,18 @@ body[data-state="ready"] .reveal {
   opacity: 0.75;
   transform: none;
 }
+/* compiling state reads on the control itself, not just the status bar */
+.vibe-stage[data-phase="compiling"] .vibe-compile {
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  color: color-mix(in srgb, var(--accent) 55%, white);
+  box-shadow: 0 0 30px -8px color-mix(in srgb, var(--accent) 45%, transparent);
+}
 .vibe-compile__arrow {
   color: var(--accent);
   transition: transform 0.35s var(--ease-cinema);
 }
 .vibe-compile:hover .vibe-compile__arrow { transform: translateX(3px); }
+.vibe-compile:active .vibe-compile__arrow { transform: translateX(6px); }
 .vibe-compile__key {
   font-family: var(--font-mono);
   font-size: 10px;
@@ -1450,14 +1536,18 @@ body[data-state="ready"] .reveal {
   100% { opacity: 1; scale: 1; filter: brightness(1); }
 }
 
-/* OUTPUT — downstream of Compile: glides from the right on a softer
-   blur. Overrides this pane Reveal's signature (deep/left) by higher
-   specificity; same transition, same once-only is-visible trigger —
-   so inner content swaps (idle ↔ compiled) never replay it. */
+/* OUTPUT — downstream of Compile: rides the same left → right
+   signature, travelling deeper than the source pane with the longest
+   blur dissolve — it arrives last, the most "processed" pane. No
+   hard-coded filter on the base rule: blur scales through --blur-in
+   and resolves through the shared .is-visible rule, so this pane
+   always ends opacity 1 / transform none / filter none and inner
+   content swaps (idle ↔ compiled) never replay the entrance. */
 .vibe-deck__grid > .reveal-scroll:last-child {
-  --rx: 20px;
-  --ry: 0px;
-  filter: blur(6px);
+  --rx: -72px;
+  --ry: 12px;
+  --dur: 1.05s;
+  --blur-in: 22px;
 }
 
 /* ── output: idle ghost → editorial interpretation ── */
@@ -1505,57 +1595,39 @@ body[data-state="ready"] .reveal {
 }
 
 /* ── compiled output entrance ────────────────────────────────
-   The compiled view remounts when compilation finishes.
-   Blocks resolve top → down using the existing --i index.
-   No extra JS, no new classes, no animation stacking. */
+   The compiled view remounts when compilation finishes — every
+   compile starts a clean, single animation run (the previous run's
+   DOM is gone; nothing can stack). Blocks resolve top → down using
+   the existing --i index. `backwards` fill + `from`-only keyframes:
+   the implicit end state is each block's own base style, so every
+   block lands at opacity 1 / transform none / filter none — blur is
+   strictly temporary and the text ends fully crisp. */
 .vibe-stage[data-phase="compiled"] .vibe-c__block {
-  animation: vibe-output-in 0.38s var(--ease-cinema) both;
-  animation-delay: calc(var(--i, 0) * 0.075s);
-  will-change: opacity, transform, filter;
+  animation: vibe-output-in 0.5s var(--ease-glide) backwards;
+  animation-delay: calc(var(--i, 0) * 0.09s);
 }
 
 @keyframes vibe-output-in {
   from {
     opacity: 0;
-    transform: translateY(-12px);
-    filter: blur(6px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-    filter: blur(0);
+    transform: translateY(-16px);
+    filter: blur(8px);
   }
 }
 
-/* Interests get their own smaller stagger after the block arrives. */
+/* Interests get their own smaller stagger after their block lands. */
 .vibe-stage[data-phase="compiled"] .vibe-c__interest {
-  animation: vibe-interest-in 0.3s var(--ease-cinema) both;
-  animation-delay: calc(
-    0.42s + (var(--j, 0) * 0.04s)
-  );
-  will-change: opacity, transform, filter;
+  animation: vibe-interest-in 0.34s var(--ease-glide) backwards;
+  animation-delay: calc(0.5s + (var(--j, 0) * 0.045s));
 }
 
 @keyframes vibe-interest-in {
   from {
     opacity: 0;
-    transform: translateX(-10px);
-    filter: blur(3px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(0);
-    filter: blur(0);
+    transform: translateX(-12px);
+    filter: blur(4px);
   }
 }
-
-/* entrance runs on mount, staggered per block — only in compiled phase.
-   AI-writing rhythm: chunks resolve top → down, ~70ms apart, each
-   settling in ~350ms so the full output lands in well under 2s.
-   The compiled view remounts on every compile, so each run starts
-   clean — animations can never stack. */
 
 .vibe-c__label {
   display: flex;
@@ -1596,6 +1668,13 @@ body[data-state="ready"] .reveal {
   border-radius: 999px;
   padding: 7px 15px;
   background: rgba(255, 255, 255, 0.018);
+  transition: border-color 0.3s ease, background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+}
+.vibe-c__pill:hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  color: var(--text);
+  box-shadow: 0 0 18px -6px color-mix(in srgb, var(--accent) 45%, transparent);
 }
 
 .vibe-c__interest {
@@ -1614,6 +1693,11 @@ body[data-state="ready"] .reveal {
   letter-spacing: 0.14em;
   color: color-mix(in srgb, var(--accent) 65%, white);
   opacity: 0.85;
+  transition: opacity 0.25s ease, text-shadow 0.25s ease;
+}
+.vibe-c__interest:hover .vibe-c__idx {
+  opacity: 1;
+  text-shadow: 0 0 8px color-mix(in srgb, var(--accent) 60%, transparent);
 }
 
 .vibe-c__split {
@@ -1698,9 +1782,9 @@ body[data-state="ready"] .reveal {
   .vibe-stage[data-phase="compiling"] .vibe-deck__wire {
     background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 55%, transparent), transparent);
   }
-  .vibe-compile:hover .vibe-compile__arrow { transform: translateY(2px); }
   .vibe-compile__arrow { transform: rotate(90deg); }
   .vibe-compile:hover .vibe-compile__arrow { transform: rotate(90deg) translateX(3px); }
+  .vibe-compile:active .vibe-compile__arrow { transform: rotate(90deg) translateX(6px); }
   .vibe-idle { min-height: 220px; }
 }
 
@@ -2475,6 +2559,14 @@ body[data-state="ready"] .reveal {
     0 20px 60px -18px rgba(0, 0, 0, 0.85),
     0 0 0 1px rgba(255, 255, 255, 0.07),
     0 0 40px -8px color-mix(in srgb, var(--accent) 25%, transparent);
+  transition: box-shadow 0.5s ease, transform 0.5s var(--ease-glide);
+}
+.final-mark__tile:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 24px 64px -18px rgba(0, 0, 0, 0.85),
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 0 56px -8px color-mix(in srgb, var(--accent) 40%, transparent);
 }
 .final-mark__halo {
   position: absolute;
@@ -2669,11 +2761,29 @@ body[data-state="ready"] .reveal {
   text-indent: 0.1em;
   text-decoration: none;
   color: var(--muted);
+  position: relative;
+  padding-bottom: 5px;
   transition: color 0.3s ease;
+}
+/* hairline underline draws outward from center on hover/focus */
+.final__top::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 80%, white), transparent);
+  transform: translateX(-50%);
+  transition: width 0.45s var(--ease-glide);
 }
 .final__top:hover,
 .final__top:focus-visible {
   color: var(--text);
+}
+.final__top:hover::after,
+.final__top:focus-visible::after {
+  width: 100%;
 }
 .final__session {
   font-family: var(--font-mono);
@@ -2707,24 +2817,41 @@ body[data-state="ready"] .reveal {
 }
 
 /* ── reveal motion scaling — intensity follows viewport size ──
-   Desktop travels 20–85px, tablet ~18–52px, mobile 15–30px.
-   Placed last so these equal-specificity overrides always win. */
+   Same layered language at every width, compressed for small screens:
+   shorter travel, lighter blur, quicker settle. Placed last so these
+   equal-specificity overrides always win. */
 @media (max-width: 900px) {
-  .reveal-shift-eyebrow { --rx: -18px; --ry: 4px; }
-  .reveal-shift-heading { --rx: -30px; --ry: 6px; }
-  .reveal-shift-content { --rx: -40px; --ry: 8px; }
-  .reveal-shift-deep { --rx: -48px; --ry: 10px; }
-  .reveal-shift-visual { --rx: -52px; --ry: 12px; }
-  .thing { --rx: -40px; }
-  .reveal-scroll.is-visible .cur-state { --rx: calc(-36px + (var(--i, 0) * 4px)); }
+  .reveal-shift-eyebrow { --rx: -26px; --ry: 5px; --blur-in: 8px; }
+  .reveal-shift-heading { --rx: -42px; --ry: 8px; --blur-in: 12px; }
+  .reveal-shift-content { --rx: -56px; --ry: 10px; --blur-in: 15px; }
+  .reveal-shift-deep { --rx: -66px; --ry: 12px; --blur-in: 16px; }
+  .reveal-shift-visual { --rx: -74px; --ry: 13px; --blur-in: 17px; }
+  .thing { --rx: -48px; }
+  .reveal-scroll.is-visible .cur-state { --rx: calc(-40px + (var(--i, 0) * 4px)); }
+  /* blur radii that felt right on desktop are heavy on small screens */
+  .reveal-scroll { --blur-in: 14px; }
 }
 
 @media (max-width: 640px) {
-  .reveal-shift-eyebrow { --rx: -15px; --ry: 4px; }
-  .reveal-shift-heading { --rx: -20px; --ry: 5px; }
-  .reveal-shift-content { --rx: -24px; --ry: 6px; }
-  .reveal-shift-deep { --rx: -28px; --ry: 8px; }
-  .reveal-shift-visual { --rx: -30px; --ry: 8px; }
-  .thing { --rx: -24px; }
-  .reveal-scroll.is-visible .cur-state { --rx: calc(-26px + (var(--i, 0) * 3px)); }
+  .reveal-shift-eyebrow { --rx: -16px; --ry: 4px; --blur-in: 6px; }
+  .reveal-shift-heading { --rx: -26px; --ry: 5px; --blur-in: 8px; }
+  .reveal-shift-content { --rx: -34px; --ry: 6px; --blur-in: 10px; }
+  .reveal-shift-deep { --rx: -40px; --ry: 7px; --blur-in: 11px; }
+  .reveal-shift-visual { --rx: -44px; --ry: 8px; --blur-in: 12px; }
+  .thing { --rx: -30px; }
+  .reveal-scroll.is-visible .cur-state { --rx: calc(-28px + (var(--i, 0) * 3px)); }
+  /* one shared entrance curve — long glides read as lag on phones */
+  .reveal-scroll { --dur: 0.7s; --blur-in: 10px; }
+  .reveal-tempo-slow { --dur: 0.9s; }
+  /* deck glide pinned to center on phones: phase flips at viewport
+     fractions feel like jitter at this width — rest state only */
+  .vibe-stage,
+  .vibe-stage.vp-below,
+  .vibe-stage.vp-above,
+  .vibe-stage.vp-center {
+    translate: 0 0;
+    opacity: 1;
+    filter: none;
+    transition: none;
+  }
 }

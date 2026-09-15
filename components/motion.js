@@ -46,13 +46,13 @@ export function observeReveal(el) {
 
 /* Scene continuity — one observer for hero + all sections.
    Each [data-scene] element reports two independent states:
-   Each [data-scene] element reports two independent states:
    - is-inview: entered the viewport at least once (sticky; drives
      hairline draws and other arrival continuity, never removed)
    - is-past: currently sitting fully above the viewport (live; drives
      the extremely subtle exit dimming, removed on return)
    The hero additionally publishes body[data-scene] so the background
    lighting can quietly lose intensity once the first scene is past. */
+
 /* Viewport phases — continuous-feel scroll motion for the Vibe deck.
    A THIRD shared observer (still no scroll listeners, no libraries).
    Each watched pane is classified every crossing from its live rect:
