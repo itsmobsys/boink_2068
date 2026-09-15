@@ -4,10 +4,7 @@
    No parallax, no sheen tracking — the loop closing, quietly. */
 
 export default function FinalIdentity({ displayName, avatarUrl }) {
-  const monogram =
-    displayName === "Your Name"
-      ? "—"
-      : (displayName || "—").trim().charAt(0).toUpperCase() || "—";
+  const monogram = ((displayName || "—").trim().charAt(0) || "—").toUpperCase();
 
   return (
     <div className="final-mark">

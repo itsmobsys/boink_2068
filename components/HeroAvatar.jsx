@@ -12,11 +12,8 @@ export default function HeroAvatar({ displayName, avatarUrl }) {
   const [failed, setFailed] = useState(false);
 
   const showImg = Boolean(avatarUrl) && !failed;
-  // Neutral monogram: em-dash while on the generic placeholder.
-  const monogram =
-    displayName === "Your Name"
-      ? "—"
-      : (displayName || "—").trim().charAt(0).toUpperCase() || "—";
+  // Monogram fallback: first letter of the live (or fallback) name.
+  const monogram = ((displayName || "—").trim().charAt(0) || "—").toUpperCase();
 
   useEffect(() => {
     const wrap = wrapRef.current;
@@ -86,7 +83,7 @@ export default function HeroAvatar({ displayName, avatarUrl }) {
 
       <div className="hero-avatar__tilt">
         <div className="hero-avatar__frame">
-          {/* refined placeholder: correct size, no layout shift */}
+          {/* fallback tile: correct size, no layout shift */}
           <div className="hero-avatar__fallback" aria-hidden="true">
             <span className="hero-avatar__monogram">{monogram}</span>
             <span className="hero-avatar__fallback-shimmer" />
@@ -107,11 +104,8 @@ export default function HeroAvatar({ displayName, avatarUrl }) {
         </div>
       </div>
 
-      {/* presence: neutral grey until Discord is wired */}
-      <div
-        className="hero-avatar__presence"
-        title="Presence unknown — Discord not connected yet"
-      >
+      {/* presence dot: decorative until a future presence layer lands */}
+      <div className="hero-avatar__presence" title="Discord presence">
         <span className="hero-avatar__presence-dot" />
       </div>
     </div>

@@ -1,5 +1,6 @@
 /* HeroMetadata — pure presentational, server-rendered.
-   Neutral placeholders until real Discord data arrives. */
+   Real values from lib/profile.js: Discord identity, account age
+   (from the snowflake), badge count (identify-scope flags). */
 
 export default function HeroMetadata({ metaAccount, metaBadges }) {
   return (

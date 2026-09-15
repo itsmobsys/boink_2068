@@ -251,7 +251,7 @@ body[data-state="ready"] .hero__boot { opacity: 0; }
     0 0 44px -8px color-mix(in srgb, var(--accent) 22%, transparent);
 }
 
-/* refined placeholder — honest neutral, correct size, no layout shift */
+/* fallback tile — honest neutral, correct size, no layout shift */
 .hero-avatar__fallback {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;

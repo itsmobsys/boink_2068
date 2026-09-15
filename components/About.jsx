@@ -43,12 +43,6 @@ export default function About({ about }) {
             <Reveal delay="0.26s">
               <p className="about__body">{about.body}</p>
             </Reveal>
-            <Reveal delay="0.34s">
-              <p className="about__demo-note">
-                <span aria-hidden="true">— </span>
-                {about.demoNote}
-              </p>
-            </Reveal>
           </div>
         </div>
 

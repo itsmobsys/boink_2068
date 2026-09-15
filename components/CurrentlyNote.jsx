@@ -2,7 +2,7 @@
 
 /* CurrentlyNote — random snapshot island (client).
    The ONLY browser state in Step 5: an index cycling through the
-   fictional observations in profile data. No timers, no polling,
+   curated observations in profile data. No timers, no polling,
    no loops — zero cost when idle. The note is aria-live so assistive
    tech announces each rotation; the swap animation re-triggers via
    key and is neutralized globally under reduced motion. */
