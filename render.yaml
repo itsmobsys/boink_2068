@@ -1,0 +1,28 @@
+# Render Blueprint — discord-presence-bridge ONLY.
+# Plain Node.js service (no build step exists by design: `npm install`
+# then `npm start` → `node src/index.js`). The Vercel website is
+# deployed separately and is intentionally not defined here.
+# Connect the repo via Render → New → Blueprint and set the three
+# `sync: false` secrets when prompted. If the service already exists
+# as a manual service, mirror these same values in its dashboard
+# Settings instead (Build Command: npm install, Start Command:
+# npm start) — a stale `npm run build` there is what fails deploys.
+services:
+  - type: web
+    name: discord-presence-bridge
+    runtime: node
+    rootDir: discord-presence-bridge
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: DISCORD_BOT_TOKEN
+        sync: false
+      - key: DISCORD_USER_ID
+        value: "920627516694200360"
+      - key: DISCORD_GUILD_ID
+        sync: false
+      - key: PRESENCE_SHARED_SECRET
+        sync: false
+      # PORT is injected by Render; src/index.js binds 0.0.0.0.

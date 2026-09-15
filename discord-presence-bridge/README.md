@@ -73,7 +73,14 @@ pipeline.
 
 ## 7. Deploy on Render
 
-This repo has no `render.yaml`; configure the dashboard service once:
+This repo has no `npm run build` (plain Node service — see §6), so
+Render must NOT be told to run one. Two equivalent options:
+
+**A. Blueprint (recommended):** `render.yaml` at the repo root already
+encodes everything below — Render → New → Blueprint → select the repo,
+then fill the three prompted secrets.
+
+**B. Manual service:** configure the dashboard service once:
 
 - **Root Directory:** `discord-presence-bridge` (monorepo subdirectory)
 - **Build Command:** `npm install` (NOT `npm run build` — no build script exists by design)
