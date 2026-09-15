@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 
 export default function HeroAvatar({ displayName, avatarUrl, presence }) {
   const wrapRef = useRef(null);
+  const imgRef = useRef(null);
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
 
@@ -17,6 +18,20 @@ export default function HeroAvatar({ displayName, avatarUrl, presence }) {
   // Live Gateway status; UNAVAILABLE when the bridge can't vouch.
   const status = presence?.status || "unavailable";
   const statusName = presence?.longLabel || "Status unavailable";
+
+  /* Load-state bookkeeping, independent of the container reveal.
+     `onLoad` alone is unreliable: an already-cached/decoded image
+     frequently reaches `complete` before hydration attaches the
+     listener, and then `load` never fires again — leaving the image
+     at opacity 0 forever. The DOM element is the source of truth. */
+  useEffect(() => {
+    setLoaded(false);
+    setFailed(false);
+    const el = imgRef.current;
+    if (el && el.complete && el.naturalWidth > 0) {
+      setLoaded(true);
+    }
+  }, [avatarUrl]);
 
   useEffect(() => {
     const wrap = wrapRef.current;
@@ -94,6 +109,7 @@ export default function HeroAvatar({ displayName, avatarUrl, presence }) {
           {/* real avatar fades in over the fallback once decoded */}
           {showImg && (
             <img
+              ref={imgRef}
               className={"hero-avatar__img" + (loaded ? " is-loaded" : "")}
               src={avatarUrl}
               alt={displayName + " avatar"}
