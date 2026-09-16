@@ -7,40 +7,77 @@ import { Reveal } from "./Reveal";
 /**
  * Vibe — "one file, two readings."
  *
- * SOURCE renders as an actual small config file: line numbers,
- * syntax-colored keys/values, indentation, a status bar. Fed the
- * owner's real file (vibe.sourceLines, derived from the same
- * site-owned vibe.data the previous compiler read) — the fallback
- * only covers a missing adapter, never production. COMPILE is the
- * one deliberate press-to-run interaction on the page. OUTPUT
- * re-renders that same underlying data as a human-readable read-out
- * — same facts, different form — with each line entering
- * top-to-bottom (never character-by-character).
+ * The old personality-compiler deck, rebuilt on the current
+ * contracts: a chassis with a filename/status bar and a progress
+ * hairline, then Source → Compile → Output. SOURCE tokenizes the
+ * owner's real vibe.data into multi-line JSON (line-number gutter,
+ * depth indentation, typed values) — the fallback only covers a
+ * missing adapter, never production. COMPILE is the one deliberate
+ * press-to-run interaction on the page (idle → compiling → done,
+ * re-runnable). OUTPUT re-renders that same underlying data as a
+ * human-readable read-out — same facts, different form — with each
+ * line entering top-to-bottom (never character-by-character).
+ * Machine state keys off `data-phase`; CSS does the cinema.
  */
 
-const FALLBACK_SOURCE_LINES = [
-  { key: "runtime", value: '"human"', type: "string" },
-  { key: "mode", value: '"building"', type: "string" },
-  { key: "focus", value: '"frontend + backend systems"', type: "string" },
-  { key: "caffeinated", value: "true", type: "bool" },
-  { key: "uptime_days", value: "2847", type: "number" },
+const STATUS = { idle: "Ready", compiling: "Compiling", done: "Compiled" };
+const COMPILE_MS = 950; // matches the output lines' entrance budget
+
+// Adapter-missing fallback only: raw entries in the adapter's shape,
+// covering every value type the tokenizer colors.
+const FALLBACK_ENTRIES = [
+  { key: "runtime", value: "human" },
+  { key: "mode", value: "building" },
+  { key: "focus", value: "frontend + backend systems" },
+  { key: "caffeinated", value: true },
+  { key: "uptime_days", value: 2847 },
 ];
 
-// Adapter lines carry raw keys + JSON-ish values without a type tag;
-// infer the editor coloring from the value shape (tolerant of the
-// fallback lines, which already carry both).
-function inferType(value) {
-  if (value === "true" || value === "false") return "bool";
-  if (/^-?\d+(\.\d+)?$/.test(value)) return "number";
-  return "string";
+function valueToken(value) {
+  if (typeof value === "number") return "num";
+  if (typeof value === "boolean") return "bool";
+  return "str";
 }
 
-function normalizeLine(line) {
-  return {
-    key: String(line.key).replace(/^"|"$/g, ""),
-    value: String(line.value),
-    type: line.type || inferType(String(line.value)),
-  };
+// Flatten entries into styled lines. Scalars render one line;
+// arrays unfold one item per line at a deeper indent — the full
+// extent of the vibe schema, so no content hides behind a stub.
+function tokenize(entries) {
+  const lines = [{ depth: 0, tokens: [{ t: "punct", v: "{" }] }];
+  entries.forEach(({ key, value }, i) => {
+    const comma = i < entries.length - 1 ? "," : "";
+    if (Array.isArray(value)) {
+      lines.push({
+        depth: 1,
+        tokens: [
+          { t: "key", v: JSON.stringify(key) },
+          { t: "punct", v: ": [" },
+        ],
+      });
+      value.forEach((item, j) => {
+        lines.push({
+          depth: 2,
+          tokens: [
+            { t: valueToken(item), v: JSON.stringify(item) },
+            { t: "punct", v: j < value.length - 1 ? "," : "" },
+          ],
+        });
+      });
+      lines.push({ depth: 1, tokens: [{ t: "punct", v: "]" + comma }] });
+    } else {
+      lines.push({
+        depth: 1,
+        tokens: [
+          { t: "key", v: JSON.stringify(key) },
+          { t: "punct", v: ": " },
+          { t: valueToken(value), v: JSON.stringify(value) },
+          { t: "punct", v: comma },
+        ],
+      });
+    }
+  });
+  lines.push({ depth: 0, tokens: [{ t: "punct", v: "}" }] });
+  return lines;
 }
 
 export function Vibe({ vibe }) {
@@ -70,18 +107,19 @@ export function Vibe({ vibe }) {
         setPhase("done");
         timer.current = null;
       },
-      reduceMotion.current ? 60 : 950
+      reduceMotion.current ? 60 : COMPILE_MS
     );
   }
 
   const filename = vibe.filename ?? "profile.json";
-  const rawLines =
+  const entries =
     vibe.sourceLines && vibe.sourceLines.length > 0
       ? vibe.sourceLines
-      : FALLBACK_SOURCE_LINES;
-  const sourceLines = rawLines.map(normalizeLine);
+      : FALLBACK_ENTRIES;
+  const sourceLines = tokenize(entries);
   const outputLines = vibe.outputLines ?? [];
-  const totalLines = sourceLines.length + 2;
+  const isCompiling = phase === "compiling";
+  const isDone = phase === "done";
 
   return (
     <section className="di-section di-vibe" aria-label="Vibe">
@@ -98,157 +136,135 @@ export function Vibe({ vibe }) {
           </Reveal>
         )}
 
-        <div className="di-vibe__panel">
-          {/* SOURCE */}
-          <Reveal index={2} className="di-vibe__block di-vibe__source">
-            <div className="di-vibe__editor-bar">
-              <span className="di-vibe__editor-dots" aria-hidden="true">
-                <span />
-                <span />
-                <span />
-              </span>
-              <span className="di-vibe__editor-filename di-mono">{filename}</span>
-            </div>
+        <Reveal index={3}>
+          <div className="di-vibe__stage" data-phase={phase}>
+            <div className="di-vibe__deck">
+              {/* status bar — the visual anchor that reacts to compilation */}
+              <div className="di-vibe__deck-bar di-mono">
+                <span className="di-vibe__deck-file">
+                  <span className="di-vibe__deck-dot" aria-hidden="true" />
+                  {filename}
+                </span>
+                <span className="di-vibe__deck-status">{STATUS[phase]}</span>
+              </div>
+              <div className="di-vibe__deck-progress" aria-hidden="true" />
 
-            <pre className="di-vibe__code di-mono" aria-label="Source configuration file">
-              <Line n={1}>
-                <Brace>{"{"}</Brace>
-              </Line>
-              {sourceLines.map((line, i) => (
-                <Line n={i + 2} key={line.key}>
-                  <motion.span
-                    className="di-vibe__code-row"
-                    whileHover={{ x: 3 }}
-                    transition={{ duration: 0.18 }}
+              <div className="di-vibe__deck-grid">
+                {/* SOURCE */}
+                <div className="di-vibe__pane">
+                  <p className="di-vibe__pane-tag di-mono">Source</p>
+                  <div
+                    className="di-vibe__src di-mono"
+                    aria-label="Source configuration file"
                   >
-                    <Indent />
-                    <Key>{`"${line.key}"`}</Key>
-                    <Punct>: </Punct>
-                    <Value type={line.type}>{line.value}</Value>
-                    {i < sourceLines.length - 1 && <Punct>,</Punct>}
-                  </motion.span>
-                </Line>
-              ))}
-              <Line n={totalLines}>
-                <Brace>{"}"}</Brace>
-              </Line>
-            </pre>
+                    {sourceLines.map((line, i) => (
+                      <div
+                        className="di-vibe__src-line"
+                        style={{ "--i": i }}
+                        key={i}
+                      >
+                        <span
+                          className="di-vibe__src-gutter"
+                          aria-hidden="true"
+                        >
+                          {i + 1}
+                        </span>
+                        <code
+                          className="di-vibe__src-code"
+                          style={{ "--depth": line.depth }}
+                        >
+                          {line.tokens.map((tok, j) => (
+                            <span
+                              className={`di-vibe__src-${tok.t}`}
+                              key={j}
+                            >
+                              {tok.v}
+                            </span>
+                          ))}
+                        </code>
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
-            <div className="di-vibe__editor-status di-mono">
-              <span>{filename}</span>
-              <span>{totalLines} lines</span>
-              <span>utf-8</span>
+                {/* COMPILE */}
+                <div className="di-vibe__action">
+                  <span className="di-vibe__wire" aria-hidden="true" />
+                  <button
+                    type="button"
+                    className="di-vibe__compile"
+                    onClick={handleCompile}
+                    disabled={isCompiling}
+                    aria-live="polite"
+                  >
+                    <span className="di-vibe__compile-label">
+                      {isCompiling ? "reading file…" : isDone ? "run again" : "run"}
+                    </span>
+                    <span className="di-vibe__compile-arrow" aria-hidden="true">
+                      →
+                    </span>
+                    {!isCompiling && !isDone && (
+                      <kbd className="di-vibe__compile-key" aria-hidden="true">
+                        ⏎
+                      </kbd>
+                    )}
+                  </button>
+                  <span className="di-vibe__wire" aria-hidden="true" />
+                  <p className="di-vibe__compile-hint di-mono">
+                    {isDone ? "same data, plain reading" : `interpret ${filename}`}
+                  </p>
+                </div>
+
+                {/* OUTPUT */}
+                <div className="di-vibe__pane">
+                  <p className="di-vibe__pane-tag di-mono">Output</p>
+                  <div className="di-vibe__output-body">
+                    <AnimatePresence>
+                      {isDone &&
+                        outputLines.map((line, i) => (
+                          <motion.p
+                            key={line.id}
+                            className="di-vibe__output-line"
+                            initial={{ opacity: 0, y: -10, filter: "blur(6px)" }}
+                            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                            exit={{ opacity: 0 }}
+                            transition={{
+                              duration: 0.5,
+                              delay: i * 0.11,
+                              ease: [0.16, 0.9, 0.3, 1],
+                            }}
+                          >
+                            {line.text}
+                          </motion.p>
+                        ))}
+                    </AnimatePresence>
+                    {!isDone && (
+                      <div className="di-vibe__idle">
+                        <span
+                          className="di-vibe__idle-dot"
+                          aria-hidden="true"
+                        />
+                        <p className="di-vibe__idle-title di-mono">
+                          {isCompiling ? "Compiling" : "Nothing compiled yet"}
+                        </p>
+                        <p className="di-vibe__idle-note di-mono">
+                          {isCompiling
+                            ? "Translating the file into plain English…"
+                            : "Press run to read this file in plain English."}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
-          </Reveal>
-
-          {/* COMPILE */}
-          <Reveal index={3} className="di-vibe__block di-vibe__compile">
-            <div className="di-vibe__block-head di-mono">compile</div>
-            <button
-              type="button"
-              className="di-compile-btn"
-              onClick={handleCompile}
-              disabled={phase === "compiling"}
-              aria-live="polite"
-            >
-              <span className="di-compile-btn__chassis" aria-hidden="true">
-                <motion.span
-                  className="di-compile-btn__wire"
-                  animate={
-                    phase === "compiling"
-                      ? { scaleX: [0, 1], opacity: [0.4, 1] }
-                      : {
-                          scaleX: phase === "done" ? 1 : 0,
-                          opacity: phase === "done" ? 1 : 0.4,
-                        }
-                  }
-                  transition={{ duration: 0.9, ease: "easeInOut" }}
-                />
-              </span>
-              <span className="di-compile-btn__label">
-                {phase === "compiling"
-                  ? "reading file…"
-                  : phase === "done"
-                    ? "run again"
-                    : "run"}
-              </span>
-            </button>
-            <p className="di-vibe__compile-hint di-mono">
-              {phase === "done"
-                ? "same data, plain reading"
-                : `interpret ${filename}`}
-            </p>
-          </Reveal>
-
-          {/* OUTPUT */}
-          <Reveal index={4} className="di-vibe__block di-vibe__output">
-            <div className="di-vibe__block-head di-mono">output</div>
-            <div className="di-vibe__output-body">
-              <AnimatePresence>
-                {phase === "done" &&
-                  outputLines.map((line, i) => (
-                    <motion.p
-                      key={line.id}
-                      className="di-vibe__output-line"
-                      initial={{ opacity: 0, y: -10, filter: "blur(6px)" }}
-                      animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                      exit={{ opacity: 0 }}
-                      transition={{
-                        duration: 0.5,
-                        delay: i * 0.11,
-                        ease: [0.16, 0.9, 0.3, 1],
-                      }}
-                    >
-                      {line.text}
-                    </motion.p>
-                  ))}
-              </AnimatePresence>
-              {phase !== "done" && (
-                <p className="di-vibe__output-placeholder di-mono">
-                  {phase === "compiling" ? "reading…" : "waiting to compile"}
-                </p>
-              )}
-            </div>
-          </Reveal>
-        </div>
+          </div>
+        </Reveal>
       </div>
       {/* state announcement for assistive tech (visual status is implicit) */}
       <p className="sr-only" role="status">
-        {`Compiler ${phase}.`}
+        {`Compiler ${STATUS[phase].toLowerCase()}.`}
       </p>
     </section>
   );
-}
-
-/* ---------- small syntax-styling helpers ---------- */
-
-function Line({ n, children }) {
-  return (
-    <span className="di-vibe__line">
-      <span className="di-vibe__lineno" aria-hidden="true">
-        {n}
-      </span>
-      <span className="di-vibe__linecontent">{children}</span>
-    </span>
-  );
-}
-
-function Indent() {
-  return <span className="di-vibe__indent">{"  "}</span>;
-}
-
-function Brace({ children }) {
-  return <span className="di-vibe__brace">{children}</span>;
-}
-
-function Key({ children }) {
-  return <span className="di-vibe__key">{children}</span>;
-}
-
-function Punct({ children }) {
-  return <span className="di-vibe__punct">{children}</span>;
-}
-
-function Value({ children, type }) {
-  return <span className={`di-vibe__value di-vibe__value--${type}`}>{children}</span>;
 }
