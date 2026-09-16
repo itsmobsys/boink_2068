@@ -1,0 +1,122 @@
+/* ============================================================
+   Discord identity site — design tokens
+   Scope everything under [data-scope="discord-identity"] so it
+   can drop into an existing Next.js app without leaking styles.
+   ============================================================ */
+
+[data-scope="discord-identity"] {
+  /* ---- color ---- */
+  --di-bg: #0a0b0d;
+  --di-bg-raised: #121319;
+  --di-bg-panel: #15171c;
+  --di-border: #23262e;
+  --di-border-strong: #33363f;
+
+  --di-text: #e8eaed;
+  --di-text-dim: #9a9ea8;
+  --di-text-faint: #63666f;
+
+  --di-accent: #5865f2;
+  --di-accent-soft: rgba(88, 101, 242, 0.14);
+  --di-accent-line: rgba(88, 101, 242, 0.35);
+
+  --di-online: #3ba55d;
+  --di-idle: #faa61a;
+  --di-dnd: #ed4245;
+  --di-offline: #80848e;
+
+  /* ---- type ---- */
+  --di-font-sans:
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --di-font-mono:
+    "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas,
+    monospace;
+
+  --di-size-display: clamp(2.6rem, 5.4vw, 4.6rem);
+  --di-size-h2: clamp(1.7rem, 3vw, 2.4rem);
+  --di-size-h3: clamp(1.15rem, 1.6vw, 1.4rem);
+  --di-size-body: 1rem;
+  --di-size-small: 0.85rem;
+  --di-size-micro: 0.75rem;
+
+  /* ---- rhythm ---- */
+  --di-gutter: clamp(1.25rem, 5vw, 4rem);
+  --di-section-pad: clamp(4.5rem, 11vw, 8.5rem);
+  --di-radius-sm: 8px;
+  --di-radius-md: 14px;
+  --di-radius-lg: 22px;
+
+  /* ---- motion (overridden to 0 by reduced-motion below) ---- */
+  --di-rise: 60px;
+  --di-rise-sm: 34px;
+  --di-blur: 14px;
+  --di-blur-sm: 8px;
+  --di-scale: 0.978;
+  --di-ease: cubic-bezier(0.16, 0.9, 0.3, 1);
+  --di-stagger: 90ms;
+
+  background: var(--di-bg);
+  color: var(--di-text);
+  font-family: var(--di-font-sans);
+  font-size: var(--di-size-body);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+[data-scope="discord-identity"] * {
+  box-sizing: border-box;
+}
+
+[data-scope="discord-identity"] ::selection {
+  background: var(--di-accent-soft);
+  color: var(--di-text);
+}
+
+[data-scope="discord-identity"] a {
+  color: inherit;
+}
+
+[data-scope="discord-identity"] .di-mono {
+  font-family: var(--di-font-mono);
+  letter-spacing: 0.01em;
+}
+
+[data-scope="discord-identity"] .di-container {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding-inline: var(--di-gutter);
+}
+
+[data-scope="discord-identity"] .di-section {
+  padding-block: var(--di-section-pad);
+  position: relative;
+}
+
+[data-scope="discord-identity"] :focus-visible {
+  outline: 2px solid var(--di-accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="discord-identity"] {
+    --di-rise: 0px;
+    --di-rise-sm: 0px;
+    --di-blur: 0px;
+    --di-blur-sm: 0px;
+    --di-scale: 1;
+    --di-stagger: 0ms;
+  }
+}
+
+@media (max-width: 640px) {
+  [data-scope="discord-identity"] {
+    --di-rise: 30px;
+    --di-rise-sm: 18px;
+    --di-blur: 7px;
+    --di-blur-sm: 4px;
+    --di-scale: 0.985;
+    --di-stagger: 60ms;
+  }
+}
