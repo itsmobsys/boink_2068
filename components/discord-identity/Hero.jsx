@@ -22,8 +22,8 @@ export function Hero({ profile, skills }) {
                 src={profile.avatarUrl}
                 alt=""
                 className="di-hero__avatar"
-                width={96}
-                height={96}
+                width={180}
+                height={180}
               />
               <span
                 className={`di-presence-dot di-presence-dot--${profile.presence} di-hero__presence`}

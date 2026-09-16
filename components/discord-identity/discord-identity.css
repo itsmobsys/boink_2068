@@ -235,15 +235,15 @@
 
 [data-scope="discord-identity"] .di-hero__avatar-wrap {
   position: relative;
-  width: 96px;
-  height: 96px;
+  width: 180px;
+  height: 180px;
   margin: 0 auto 1.75rem;
 }
 
 [data-scope="discord-identity"] .di-hero__avatar-halo {
   position: absolute;
-  inset: -22px;
-  border-radius: 30px;
+  inset: -40px;
+  border-radius: 54px;
   background: radial-gradient(
     circle,
     var(--di-accent-soft) 0%,
@@ -254,9 +254,9 @@
 
 [data-scope="discord-identity"] .di-hero__avatar {
   position: relative;
-  width: 96px;
-  height: 96px;
-  border-radius: 26px;
+  width: 180px;
+  height: 180px;
+  border-radius: 48px;
   object-fit: cover;
   border: 1px solid var(--di-border-strong);
   display: block;
@@ -264,17 +264,17 @@
 
 [data-scope="discord-identity"] .di-hero__presence {
   position: absolute;
-  bottom: -3px;
-  right: -3px;
-  width: 18px;
-  height: 18px;
+  bottom: -5px;
+  right: -5px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   border: 3px solid var(--di-bg);
   margin: 0;
 }
 
 [data-scope="discord-identity"] .di-hero__name {
-  font-size: var(--di-size-display);
+  font-size: clamp(1.95rem, 4.05vw, 3.45rem);
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.05;
