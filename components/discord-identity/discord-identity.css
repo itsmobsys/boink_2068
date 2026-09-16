@@ -315,9 +315,54 @@
   flex-wrap: wrap;
   list-style: none;
   padding: 0;
-  margin: 0 0 2.6rem;
+  margin: 0 0 1.5rem;
   font-size: var(--di-size-micro);
   color: var(--di-text-faint);
+}
+
+[data-scope="discord-identity"] .di-hero__actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0 0 2.6rem;
+}
+
+/* Small external link — same voice as .di-back-to-top /
+   .di-snapshot-cycler__button: transparent, bordered, mono, small.
+   Native <a> keeps it keyboard operable; :focus-visible comes from
+   tokens.css so the focus ring always matches the design. */
+[data-scope="discord-identity"] .di-github-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  min-height: 40px;
+  padding: 0.55rem 1.1rem;
+  border: 1px solid var(--di-border);
+  border-radius: var(--di-radius-sm);
+  background: transparent;
+  color: var(--di-text-dim);
+  font-size: var(--di-size-small);
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease,
+    transform 0.2s ease;
+}
+[data-scope="discord-identity"] .di-github-button:hover {
+  border-color: var(--di-accent-line);
+  color: var(--di-text);
+  background: var(--di-accent-soft);
+}
+[data-scope="discord-identity"] .di-github-button:active {
+  transform: translateY(1px) scale(0.98);
+}
+[data-scope="discord-identity"] .di-github-button__icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  display: block;
 }
 
 [data-scope="discord-identity"] .di-hero__skills {
@@ -579,16 +624,57 @@
 /* two-part composition: source → action → output */
 [data-scope="discord-identity"] .di-vibe__deck-grid {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   gap: clamp(1.25rem, 3vw, 2.25rem);
   padding: clamp(1.4rem, 3vw, 2.1rem);
   align-items: stretch;
+  transition: grid-template-columns 0.45s var(--di-ease);
+}
+/* while the machine runs, the source track collapses and Output
+   takes its place — Source leaves layout entirely, never layered
+   visibly behind the compiled read-out */
+[data-scope="discord-identity"] .di-vibe__stage[data-phase="compiling"] .di-vibe__deck-grid,
+[data-scope="discord-identity"] .di-vibe__stage[data-phase="done"] .di-vibe__deck-grid {
+  grid-template-columns: minmax(0, 0fr) auto minmax(0, 1fr);
 }
 
 [data-scope="discord-identity"] .di-vibe__pane {
   min-width: 0;
   display: flex;
   flex-direction: column;
+}
+
+/* source collapse: the pane is its own single-track grid so the whole
+   pane (tag + file) shrinks away while fading slightly left — opacity
+   + transform transition, layout follows. Resetting to idle restores
+   it through the same transition in reverse. */
+[data-scope="discord-identity"] .di-vibe__pane--source {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition:
+    grid-template-rows 0.45s var(--di-ease),
+    opacity 0.3s ease,
+    visibility 0s;
+}
+[data-scope="discord-identity"] .di-vibe__pane-clip {
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  transition: transform 0.45s var(--di-ease);
+}
+[data-scope="discord-identity"] .di-vibe__stage[data-phase="compiling"] .di-vibe__pane--source,
+[data-scope="discord-identity"] .di-vibe__stage[data-phase="done"] .di-vibe__pane--source {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    grid-template-rows 0.45s var(--di-ease),
+    opacity 0.3s ease,
+    visibility 0s linear 0.45s;
+}
+[data-scope="discord-identity"] .di-vibe__stage[data-phase="compiling"] .di-vibe__pane-clip,
+[data-scope="discord-identity"] .di-vibe__stage[data-phase="done"] .di-vibe__pane-clip {
+  transform: translateX(-14px);
 }
 
 [data-scope="discord-identity"] .di-vibe__pane-tag {
@@ -624,7 +710,6 @@
 [data-scope="discord-identity"] .di-vibe__src {
   font-size: 12.5px;
   line-height: 1.95;
-  transition: opacity 0.5s ease;
 }
 [data-scope="discord-identity"] .di-vibe__src-line {
   display: grid;
@@ -683,32 +768,10 @@
   color: #ffffff;
 }
 
-/* compile pass: lines illuminate top → bottom on a tight grid so the
-   reading sweep lands inside the 950ms compile budget — the sweep
-   finishes as the output arrives rather than being cut off mid-file */
-[data-scope="discord-identity"] .di-vibe__stage[data-phase="done"] .di-vibe__src {
-  opacity: 0.5;
-}
-[data-scope="discord-identity"] .di-vibe__stage[data-phase="compiling"] .di-vibe__src-line {
-  background: rgba(255, 255, 255, 0.035);
-  transition-delay: calc(var(--i) * 12ms);
-}
-[data-scope="discord-identity"] .di-vibe__stage[data-phase="compiling"] .di-vibe__src-gutter {
-  color: var(--di-accent);
-  opacity: 1;
-  text-shadow: 0 0 8px var(--di-accent-soft);
-  transition-delay: calc(var(--i) * 12ms);
-}
-[data-scope="discord-identity"] .di-vibe__stage[data-phase="compiling"] .di-vibe__src-key {
-  color: var(--di-text);
-  transition-delay: calc(var(--i) * 12ms);
-}
-[data-scope="discord-identity"] .di-vibe__stage[data-phase="compiling"] .di-vibe__src-str,
-[data-scope="discord-identity"] .di-vibe__stage[data-phase="compiling"] .di-vibe__src-num,
-[data-scope="discord-identity"] .di-vibe__stage[data-phase="compiling"] .di-vibe__src-bool {
-  color: #ffffff;
-  transition-delay: calc(var(--i) * 12ms);
-}
+/* retired: the compile-pass sweep illuminated Source while the
+   machine ran — Source now collapses away on run instead, so there
+   is no file left on screen to sweep across. Hover lighting above
+   still applies while Source is visible (idle). */
 
 /* --- compile control column --- */
 
@@ -975,7 +1038,10 @@
   [data-scope="discord-identity"] .di-vibe__src-key,
   [data-scope="discord-identity"] .di-vibe__src-str,
   [data-scope="discord-identity"] .di-vibe__src-num,
-  [data-scope="discord-identity"] .di-vibe__src-bool {
+  [data-scope="discord-identity"] .di-vibe__src-bool,
+  [data-scope="discord-identity"] .di-vibe__deck-grid,
+  [data-scope="discord-identity"] .di-vibe__pane--source,
+  [data-scope="discord-identity"] .di-vibe__pane-clip {
     transition: none;
   }
   [data-scope="discord-identity"] .di-vibe__compile,
@@ -1369,13 +1435,25 @@
   margin: 1rem 0 0;
 }
 
+@media (max-width: 640px) {
+  [data-scope="discord-identity"] .di-hero__actions {
+    margin-bottom: 2.25rem;
+  }
+  [data-scope="discord-identity"] .di-github-button {
+    min-height: 44px;
+    padding: 0.65rem 1.2rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   /* Hover lifts are motion-driven inline styles — pin them off so
      reduced-motion users get zero movement even on pointer hover.
      (Vibe source lines never move on hover; the deck's own reduced-
      motion block covers its button and machine animations.) */
   [data-scope="discord-identity"] .di-chip,
-  [data-scope="discord-identity"] .di-things__row {
+  [data-scope="discord-identity"] .di-things__row,
+  [data-scope="discord-identity"] .di-github-button {
     transform: none !important;
+    transition: none;
   }
 }

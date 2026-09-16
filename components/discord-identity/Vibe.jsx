@@ -150,13 +150,15 @@ export function Vibe({ vibe }) {
               <div className="di-vibe__deck-progress" aria-hidden="true" />
 
               <div className="di-vibe__deck-grid">
-                {/* SOURCE */}
-                <div className="di-vibe__pane">
-                  <p className="di-vibe__pane-tag di-mono">Source</p>
-                  <div
-                    className="di-vibe__src di-mono"
-                    aria-label="Source configuration file"
-                  >
+                {/* SOURCE — collapses away the moment the machine runs,
+                    so compiled output never sits on top of it */}
+                <div className="di-vibe__pane di-vibe__pane--source">
+                  <div className="di-vibe__pane-clip">
+                    <p className="di-vibe__pane-tag di-mono">Source</p>
+                    <div
+                      className="di-vibe__src di-mono"
+                      aria-label="Source configuration file"
+                    >
                     {sourceLines.map((line, i) => (
                       <div
                         className="di-vibe__src-line"
@@ -184,6 +186,7 @@ export function Vibe({ vibe }) {
                         </code>
                       </div>
                     ))}
+                    </div>
                   </div>
                 </div>
 
