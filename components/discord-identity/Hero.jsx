@@ -74,7 +74,7 @@ export function Hero({ profile, skills }) {
               <motion.li
                 key={skill.label}
                 className="di-chip"
-                data-group={skill.group ?? "default"}
+                data-group={skill.group}
                 initial={{ opacity: 0, y: 16, filter: "blur(6px)" }}
                 whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                 viewport={{ once: true, margin: "-5% 0px" }}
@@ -85,8 +85,17 @@ export function Hero({ profile, skills }) {
                 }}
                 whileHover={{ y: -3 }}
               >
-                {skill.label}
+                <span className="di-chip__dot" aria-hidden="true" />
+                <span className="di-chip__label">{skill.label}</span>
               </motion.li>
+            ))}
+          </ul>
+          <ul className="di-hero__skills-legend di-mono" aria-hidden="true">
+            {SKILL_GROUP_ORDER.map((group) => (
+              <li key={group} data-group={group}>
+                <span className="di-chip__dot" />
+                {SKILL_GROUP_LABEL[group]}
+              </li>
             ))}
           </ul>
         </Reveal>
@@ -94,3 +103,21 @@ export function Hero({ profile, skills }) {
     </section>
   );
 }
+
+const SKILL_GROUP_ORDER = [
+  "frontend",
+  "backend",
+  "infra",
+  "ai",
+  "tooling",
+  "platform",
+];
+
+const SKILL_GROUP_LABEL = {
+  frontend: "frontend",
+  backend: "backend",
+  infra: "infrastructure",
+  ai: "ai",
+  tooling: "tooling",
+  platform: "platforms",
+};

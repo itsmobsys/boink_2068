@@ -25,6 +25,31 @@
   --di-dnd: #ed4245;
   --di-offline: #80848e;
 
+  /* ---- skill group accents (muted, one hue family each) ---- */
+  --di-group-frontend: #6aa6ff;
+  --di-group-frontend-soft: rgba(106, 166, 255, 0.12);
+  --di-group-frontend-line: rgba(106, 166, 255, 0.32);
+
+  --di-group-backend: #5fd0a4;
+  --di-group-backend-soft: rgba(95, 208, 164, 0.12);
+  --di-group-backend-line: rgba(95, 208, 164, 0.32);
+
+  --di-group-infra: #e0a75e;
+  --di-group-infra-soft: rgba(224, 167, 94, 0.12);
+  --di-group-infra-line: rgba(224, 167, 94, 0.32);
+
+  --di-group-ai: #b18aff;
+  --di-group-ai-soft: rgba(177, 138, 255, 0.13);
+  --di-group-ai-line: rgba(177, 138, 255, 0.34);
+
+  --di-group-tooling: #8b93a7;
+  --di-group-tooling-soft: rgba(139, 147, 167, 0.12);
+  --di-group-tooling-line: rgba(139, 147, 167, 0.3);
+
+  --di-group-platform: #e08bb0;
+  --di-group-platform-soft: rgba(224, 139, 176, 0.12);
+  --di-group-platform-line: rgba(224, 139, 176, 0.32);
+
   /* ---- type ---- */
   --di-font-sans:
     "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -45,6 +70,15 @@
   --di-radius-sm: 8px;
   --di-radius-md: 14px;
   --di-radius-lg: 22px;
+
+  /* ---- starfield ---- */
+  --di-star-opacity-far: 0.35;
+  --di-star-opacity-mid: 0.5;
+  --di-star-opacity-near: 0.65;
+  --di-star-twinkle-duration: 6s;
+  --di-star-drift-duration-far: 140s;
+  --di-star-drift-duration-mid: 95s;
+  --di-star-drift-duration-near: 65s;
 
   /* ---- motion (overridden to 0 by reduced-motion below) ---- */
   --di-rise: 60px;
@@ -88,11 +122,6 @@
   padding-inline: var(--di-gutter);
 }
 
-[data-scope="discord-identity"] .di-section {
-  padding-block: var(--di-section-pad);
-  position: relative;
-}
-
 [data-scope="discord-identity"] :focus-visible {
   outline: 2px solid var(--di-accent);
   outline-offset: 3px;
@@ -107,6 +136,10 @@
     --di-blur-sm: 0px;
     --di-scale: 1;
     --di-stagger: 0ms;
+    --di-star-twinkle-duration: 0s;
+    --di-star-drift-duration-far: 0s;
+    --di-star-drift-duration-mid: 0s;
+    --di-star-drift-duration-near: 0s;
   }
 }
 

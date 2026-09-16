@@ -9,6 +9,7 @@ import { Vibe } from "./Vibe";
 import { ThingsIDo } from "./ThingsIDo";
 import { Currently } from "./Currently";
 import { Final } from "./Final";
+import { Starfield } from "./Starfield";
 
 /**
  * Top-level page component. Purely presentational — all content
@@ -20,6 +21,7 @@ import { Final } from "./Final";
 export function DiscordIdentityPage({ data }) {
   return (
     <div data-scope="discord-identity" className="di-root">
+      <Starfield />
       <Hero profile={data.profile} skills={data.skills} />
       <About about={data.about} />
       <Vibe vibe={data.vibe} />
