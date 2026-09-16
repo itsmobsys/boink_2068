@@ -3,7 +3,7 @@
 
 export default function ScrollIndicator() {
   return (
-    <div className="scroll-hint reveal" style={{ "--d": "1.05s" }} aria-hidden="true">
+    <div className="scroll-hint reveal" style={{ "--d": "0.9s" }} aria-hidden="true">
       <span className="scroll-hint__text">Scroll to explore</span>
       <span className="scroll-hint__arrow">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none">

@@ -8,7 +8,7 @@ export default function HeroMetadata({ metaAccount, metaBadges, presence }) {
   const label = presence?.label || "UNAVAILABLE";
   const longLabel = presence?.longLabel || "Status unavailable";
   return (
-    <div className="hero__meta reveal" style={{ "--d": "0.86s" }} aria-label="Identity metadata">
+    <div className="hero__meta reveal" style={{ "--d": "0.78s" }} aria-label="Identity metadata">
       <span className="hero__meta-item hero__meta-item--live">
         <i aria-hidden="true" />
         Discord

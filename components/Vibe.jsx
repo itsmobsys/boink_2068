@@ -4,6 +4,7 @@
    zero JavaScript. */
 
 import Reveal from "./Reveal";
+import SplitText from "./SplitText";
 import VibeCompiler from "./VibeCompiler";
 
 export default function Vibe({ vibe }) {
@@ -23,7 +24,9 @@ export default function Vibe({ vibe }) {
             </h2>
           </Reveal>
           <Reveal delay="0.13s">
-            <p className="vibe__description">{vibe.description}</p>
+            <p className="vibe__description">
+              <SplitText text={vibe.description} />
+            </p>
           </Reveal>
         </div>
 

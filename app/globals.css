@@ -25,6 +25,14 @@
   --ease-cinema: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-glide: cubic-bezier(0.19, 1, 0.22, 1);
 
+  /* shared scroll state — written by motion.js initScrollMotion while
+     the page moves, and resting at these values the rest of the time
+     (so every consumer below is a plain, static value with no JS) */
+  --sblur: 0px;
+  --sdepth: 0px;
+  --hero-out: 0;
+  --scroll-y: 0;
+
   --font-display: var(--next-display, "Inter Tight", "Inter", -apple-system, "Segoe UI", sans-serif);
   --font-body: var(--next-body, "Inter", -apple-system, "Segoe UI", sans-serif);
   --font-mono: var(--next-mono, "JetBrains Mono", "SFMono-Regular", Consolas, monospace);
@@ -124,11 +132,20 @@ body[data-state="ready"] .bg { opacity: 1; }
     linear-gradient(180deg, rgba(0, 0, 0, 0.25) 0%, transparent 18%, transparent 82%, rgba(0, 0, 0, 0.45) 100%);
 }
 
-/* scene continuity: these three lights dim slowly once the hero scene
-   scrolls past (body[data-scene="beyond"]) — the room stays, the key
-   light quiets, and About enters onto one continuous canvas.
-   Pure IO-driven class toggle, no scroll listeners. */
-.bg__core-light, .bg__accent-wash, .bg__avatar-halo { transition: opacity 1.4s ease; }
+/* scene continuity: the three lights follow the SAME --hero-out the hero
+   copy does, so the room dims *with* the subject on its way out instead
+   of waiting for the scene to be reported past and then snapping a beat
+   after the copy has already gone. The transition is deliberately short:
+   --hero-out is republished every frame while scrolling, and a long ease
+   would lag the gesture and then keep drifting to a stale value, whereas
+   0.5s just lets the atmosphere trail the scroll.
+   The body[data-scene="beyond"] trio is the floor, not a second effect:
+   it lands on the exact values --hero-out reaches at its clamp, so the
+   two agree and nothing double-dims. */
+.bg__core-light, .bg__accent-wash, .bg__avatar-halo { transition: opacity 0.5s ease; }
+.bg__core-light { opacity: calc(1 - var(--hero-out, 0) * 0.55); }
+.bg__accent-wash { opacity: calc(0.8 - var(--hero-out, 0) * 0.4); }
+.bg__avatar-halo { opacity: calc(1 - var(--hero-out, 0) * 0.5); }
 body[data-scene="beyond"] .bg__core-light { opacity: 0.45; }
 body[data-scene="beyond"] .bg__accent-wash { opacity: 0.4; }
 body[data-scene="beyond"] .bg__avatar-halo { opacity: 0.5; }
@@ -456,22 +473,58 @@ body[data-state="ready"] .hero__boot { opacity: 0; }
 }
 .hero__meta-sep { opacity: 0.4; }
 
-/* ── 8b. SKILL CHIPS — tiny identity metadata, secondary to name/avatar.
+/* ── 8b. SKILL CHIPS — a small system, not a row of pills.
    Compact wrapped row directly below .hero__meta. Muted pill, 1px
-   border, small mono text; per-chip color lives ONLY in the 5px dot
-   (via --dot) plus a whisper of glow on hover. Non-interactive. */
+   border, small mono text; per-chip colour lives ONLY in the 5px dot
+   (via --dot). Three optional layers, each doing one job:
+     1. entrance    — the staggered cascade on the shared hero gate
+     2. presence    — ONE listener on the row publishes --mx/--my and a
+                      soft accent light travels behind the pills
+     3. interaction — hover lifts the chip and lets its own colour into
+                      border, dot and cast shadow
+   Informational only: plain list items, never buttons or links. */
 .hero__skills {
   --chip-x: -12px;
-  --chip-stagger: 0.035s;
+  --chip-stagger: 0.015s;
+  --glow: 260px;
+  position: relative;
+  isolation: isolate;
   margin-top: 18px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  max-width: 560px;
+  max-width: 620px;
   list-style: none;
 }
+
+/* presence light — painted at the bottom of the row's own stacking
+   context (isolation above, z-index -1 here), so it lights the space
+   BEHIND the pills and can never sit over text or take a pointer.
+   Fades with the pointer; never animates on its own. */
+.hero__skills::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: -1;
+  width: var(--glow);
+  height: var(--glow);
+  margin: calc(var(--glow) / -2) 0 0 calc(var(--glow) / -2);
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--accent) 11%, transparent),
+    transparent 72%
+  );
+  transform: translate3d(var(--mx, -100vw), var(--my, 0px), 0);
+  opacity: 0;
+  transition: opacity 0.45s ease;
+  pointer-events: none;
+}
+.hero__skills[data-glow="on"]::before { opacity: 1; }
+
 .hero__skill {
   display: inline-flex;
   align-items: center;
@@ -489,16 +542,21 @@ body[data-state="ready"] .hero__boot { opacity: 0; }
   opacity: 0;
   transition:
     border-color 0.25s ease,
+    background 0.25s ease,
     color 0.25s ease,
-    translate 0.25s var(--ease-cinema);
+    box-shadow 0.3s ease,
+    translate 0.3s var(--ease-cinema);
 }
-/* staggered cascade on the Hero boot gate (metadata 0.86s → chips
-   from 0.98s): 16 chips × 35ms = 525ms span + 150ms settle = 675ms
-   total. `both` fill holds the rested state; hover lift uses the
-   independent `translate` property so the fill never fights it. */
+/* staggered cascade on the Hero boot gate (metadata 0.78s → chips from
+   0.82s). At 30 chips the old 22ms grid spanned 660ms and pushed the
+   last pill to ~2.8s after the gate — past the point where a stagger
+   still reads as a cascade and into lag. 15ms × 30 = a 435ms sweep, so
+   the whole row settles at ~1.6s, just as the metadata line does.
+   `both` fill holds the rested state; hover lift uses the independent
+   `translate` property so the fill never fights it. */
 body[data-state="ready"] .hero__skill {
   animation: chip-in 0.32s var(--ease-glide) both;
-  animation-delay: calc(0.98s + (var(--i, 0) * var(--chip-stagger)));
+  animation-delay: calc(0.82s + (var(--i, 0) * var(--chip-stagger)));
 }
 @keyframes chip-in {
   from { opacity: 0; transform: translateX(var(--chip-x)); filter: blur(3px); }
@@ -515,21 +573,27 @@ body[data-state="ready"] .hero__skill {
    the resting base (and hover below) always win afterward. */
 body[data-state="ready"] .hero__skill i {
   animation: chip-dot 0.5s ease backwards;
-  animation-delay: calc(0.98s + (var(--i, 0) * var(--chip-stagger)));
+  animation-delay: calc(0.82s + (var(--i, 0) * var(--chip-stagger)));
 }
 @keyframes chip-dot {
   0% { opacity: 0.4; box-shadow: none; }
   40% { opacity: 1; box-shadow: 0 0 8px var(--dot, var(--accent)); }
   100% { opacity: 0.85; box-shadow: none; }
 }
+/* interaction — the chip lifts a couple of pixels and lets its OWN
+   colour in: border, dot glow and cast shadow all key off --dot, so
+   thirty chips read as one system with thirty voices instead of
+   thirty identical pills. Restrained: 2px of travel, no scale pop. */
 .hero__skill:hover {
-  border-color: var(--line);
-  color: var(--text-dim);
-  translate: 0 -1px;
+  border-color: color-mix(in srgb, var(--dot, var(--accent)) 46%, transparent);
+  background: color-mix(in srgb, var(--dot, var(--accent)) 7%, rgba(255, 255, 255, 0.02));
+  color: var(--text);
+  translate: 0 -2px;
+  box-shadow: 0 10px 20px -12px color-mix(in srgb, var(--dot, var(--accent)) 70%, transparent);
 }
 .hero__skill:hover i {
   opacity: 1;
-  box-shadow: 0 0 6px var(--dot, var(--accent));
+  box-shadow: 0 0 9px var(--dot, var(--accent));
 }
 
 /* ── 9. SCROLL INDICATOR ───────────────────────────────────── */
@@ -551,12 +615,14 @@ body[data-state="ready"] .hero__skill i {
   text-transform: uppercase;
   text-indent: 0.3em;
   white-space: nowrap;
-  animation: hint-breathe 3.2s ease-in-out infinite;
+  /* one shared period with the arrow below: two different cycles on a
+     single hint read as a beat pattern rather than an invitation */
+  animation: hint-breathe 2.4s ease-in-out infinite;
 }
 .scroll-hint__arrow {
   display: flex;
   opacity: 0.8;
-  animation: hint-drop 2.2s var(--ease-cinema) infinite;
+  animation: hint-drop 2.4s var(--ease-cinema) infinite;
 }
 @keyframes hint-drop {
   0%, 100% { transform: translateY(0); opacity: 0.45; }
@@ -613,7 +679,7 @@ body[data-state="ready"] .hero__skill i {
    fill ending at filter: none was flattening those shadows away). */
 body[data-state="ready"] .reveal {
   opacity: 1;
-  animation: rise 1.25s var(--ease-glide) backwards;
+  animation: rise 1.1s var(--ease-glide) backwards;
   animation-delay: var(--d, 0s);
 }
 /* `from`-only keyframes: the implicit `to` keyframe resolves to each
@@ -642,13 +708,16 @@ body[data-state="ready"] .reveal {
   }
   .hero__skills {
     --chip-x: -7px;
-    --chip-stagger: 0.028s;
+    --chip-stagger: 0.013s;
+    --glow: 200px;
     margin-top: 16px;
     gap: 5px;
     max-width: 100%;
     font-size: 10px;
   }
-  .hero__skill { font-size: 10px; padding: 2px 9px 2px 8px; }
+  /* narrower pills keep thirty chips inside the first screen on a
+     phone without hiding any of them */
+  .hero__skill { font-size: 9.5px; padding: 2px 8px 2px 7px; gap: 5px; }
   .bg__avatar-halo {
     background: radial-gradient(
       200px 200px at 50% 30%,
@@ -656,6 +725,20 @@ body[data-state="ready"] .reveal {
       transparent 70%
     );
   }
+}
+
+/* Short viewports — small phones, phones in landscape, and short
+   desktop windows. The hero has to stay ONE screen with thirty chips
+   in it, so the rhythm compresses and the avatar gives up a little
+   size. Content is never trimmed. */
+@media (max-height: 780px) {
+  :root { --avatar: clamp(112px, 30vw, 150px); }
+  .hero { padding-top: 56px; padding-bottom: 84px; }
+  .hero__label { margin-bottom: 18px; }
+  .hero-avatar { margin-bottom: 20px; }
+  .hero__line { margin-top: 12px; }
+  .hero__meta { margin-top: 18px; }
+  .hero__skills { margin-top: 12px; }
 }
 
 @media (max-width: 380px) {
@@ -685,7 +768,10 @@ body[data-state="ready"] .reveal {
     --blur-in: 0px;
     opacity: 1 !important;
     transform: translate3d(0, 0, 0) !important;
-    filter: blur(0) !important;
+    /* `none`, not blur(0): a filter of any value keeps ~35 revealed
+       blocks promoted to their own filtered layer for the whole page,
+       for no visual gain */
+    filter: none !important;
     transition: none !important;
     transition-delay: 0s !important;
     will-change: auto;
@@ -858,11 +944,19 @@ body[data-state="ready"] .reveal {
   -webkit-mask-image: radial-gradient(75% 75% at 50% 50%, #000 30%, transparent 78%);
   mask-image: radial-gradient(75% 75% at 50% 50%, #000 30%, transparent 78%);
 }
+/* The orbit tick is a DIAL, not a spinner: its angle comes from the
+   shared scroll position published unitless by motion.js. That keeps
+   the feel of live instrumentation (the plate has a reading) while
+   removing the infinite loop entirely — nothing moves while the page
+   is still, and under reduced motion the value never leaves 0. It rides
+   the `rotate` property so it composes with the centering transform
+   instead of competing with it. */
 .about-visual__ring {
   position: absolute;
   top: 50%; left: 50%;
   width: 56%; aspect-ratio: 1;
   transform: translate(-50%, -50%);
+  rotate: calc(var(--scroll-y, 0) * 0.045deg);
   border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
   border-radius: 50%;
 }
@@ -891,9 +985,11 @@ body[data-state="ready"] .reveal {
   transform: translateX(-60%);
   opacity: 0;
 }
-/* sweep runs once, when the wrapping Reveal fires */
+/* sweep runs once, when the wrapping Reveal fires — offset past that
+   wrapper's own 0.13s delay so it crosses an already-settled plate
+   instead of racing the blur it is dissolving out of */
 .reveal-scroll.is-visible .about-visual__sweep {
-  animation: about-sweep 2s var(--ease-cinema) 0.25s both;
+  animation: about-sweep 1.5s var(--ease-cinema) 0.33s both;
 }
 @keyframes about-sweep {
   0% { transform: translateX(-60%); opacity: 0; }
@@ -983,15 +1079,6 @@ body[data-state="ready"] .reveal {
   max-width: 60ch;
   text-wrap: pretty;
 }
-.about__demo-note {
-  margin-top: 28px;
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--faint);
-}
-
 /* ── lower: quiet attribute row ── */
 .about__foot {
   margin-top: clamp(64px, 8vh, 108px);
@@ -1043,14 +1130,20 @@ body[data-state="ready"] .reveal {
   will-change: opacity, transform, filter;
 }
 /* One crisp settled state for every reveal: opacity 1 / translate 0 /
-   blur 0. The --rx-end / --ry-end escape hatches (0 by default) let
+   NO filter. The --rx-end / --ry-end escape hatches (0 by default) let
    the deck panes overshoot instead of authoring new end states —
    every variant still resolves through this exact rule, so nothing
-   can stay transformed or blurred after its entrance. */
+   can stay transformed or blurred after its entrance.
+   `none` rather than `blur(0)`: a filter value of any kind keeps the
+   element promoted to its own filtered layer for the life of the page,
+   so the ~60 revealed blocks each paid for a texture they no longer
+   needed. A filter list interpolates against `none` as the identity, so
+   the blur still dissolves smoothly — it just ends by leaving nothing
+   behind, which is also the state every inner keyframe already targets. */
 .reveal-scroll.is-visible {
   opacity: 1;
   transform: translate3d(var(--rx-end), var(--ry-end), 0);
-  filter: blur(0);
+  filter: none;
   will-change: auto;
 }
 
@@ -1079,11 +1172,47 @@ body[data-state="ready"] .reveal {
 .things__inner,
 .currently__inner,
 .final__inner {
+  position: relative;
   border-top-color: transparent;
   transition:
     border-color 0.9s ease 0.05s,
     opacity 0.8s ease,
     transform 0.8s var(--ease-cinema);
+}
+
+/* The seam marker — a short accent segment that draws itself along the
+   top hairline as a section arrives, then stays as that section's
+   anchor. This is the section-to-section handoff made visible: every
+   scene becomes a chapter whose start you can see, and it is the one
+   decorative rule all five sections share, so the page reads as a
+   bound document rather than five stacked blocks. One class toggle
+   from the existing observer: no new JS, no loops. */
+.about__inner::before,
+.vibe__inner::before,
+.things__inner::before,
+.currently__inner::before,
+.final__inner::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: clamp(72px, 14%, 168px);
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+  transform: scaleX(0.18);
+  transform-origin: 0 50%;
+  opacity: 0;
+  transition:
+    transform 0.85s var(--ease-glide) 0.08s,
+    opacity 0.6s ease 0.08s;
+}
+.scene.is-inview .about__inner::before,
+.scene.is-inview .vibe__inner::before,
+.scene.is-inview .things__inner::before,
+.scene.is-inview .currently__inner::before,
+.scene.is-inview .final__inner::before {
+  transform: scaleX(1);
+  opacity: 0.5;
 }
 .scene.is-inview .about__inner,
 .scene.is-inview .vibe__inner,
@@ -1117,8 +1246,8 @@ body[data-state="ready"] .reveal {
     opacity 1.1s ease,
     filter 1.1s ease;
 }
-.scene-root.vp-below { translate: 0 10px; opacity: 0.965; filter: blur(1.5px); }
-.scene-root.vp-above { translate: 0 -10px; opacity: 0.975; filter: blur(0.75px); }
+.scene-root.vp-below { translate: 0 10px; opacity: 0.965; filter: blur(0.8px); }
+.scene-root.vp-above { translate: 0 -10px; opacity: 0.975; filter: blur(0.4px); }
 .scene-root.vp-center { translate: 0 0; opacity: 1; filter: none; }
 
 /* ── decorative micro-parallax (two-state, IO-driven) ──
@@ -1229,11 +1358,10 @@ body[data-state="ready"] .reveal {
 }
 
 /* ── compiler deck ── */
-.vibe-stage {
-  margin-top: clamp(48px, 6vh, 72px);
-}
-
 .vibe-deck {
+  /* position only — the glow layer's [data-glow] rule supplies the
+     stacking context, so it is declared in exactly one place */
+  position: relative;
   border: 1px solid var(--line-soft);
   border-radius: 22px;
   overflow: hidden;
@@ -1243,10 +1371,9 @@ body[data-state="ready"] .reveal {
   box-shadow:
     0 30px 80px -30px rgba(0, 0, 0, 0.8),
     0 0 0 1px rgba(255, 255, 255, 0.015);
-}
-
-/* deck reaction — the chassis breathes with the compile cycle */
-.vibe-deck {
+  /* one rule owns the chassis: the border and glow breathe with the
+     compile cycle, and the pointer light (PointerGlow) fades on the
+     same clock instead of fighting it */
   transition: border-color 0.6s ease, box-shadow 0.6s ease;
 }
 .vibe-stage[data-phase="compiling"] .vibe-deck {
@@ -1262,11 +1389,15 @@ body[data-state="ready"] .reveal {
 
 /* viewport-phase glide — scroll continuity for the deck (classes set
    by motion.js observeViewportPhase; one shared IO, no listeners).
-   Approach / leave states drift and soften a touch; center is the
-   one crisp resting state (opacity 1, no translate, no blur). The
-   drift rides the dedicated translate property so it can never fight
-   the deck grid's reveal transform. */
+   The stage's spacing lives in THIS rule too: exactly one rule owns
+   the stage's transform state, so nothing has to out-specify anything
+   else. Approach and leave drift and soften a touch; center is the
+   crisp resting state. The drift rides the dedicated translate
+   property so it can never fight the deck grid's reveal transform,
+   and the scroll-velocity defocus composes on the panes rather than
+   here — the two never multiply on the same box. */
 .vibe-stage {
+  margin-top: clamp(48px, 6vh, 72px);
   translate: 0 0;
   opacity: 1;
   filter: none;
@@ -1275,8 +1406,8 @@ body[data-state="ready"] .reveal {
     opacity 1s ease,
     filter 1s ease;
 }
-.vibe-stage.vp-below { translate: 0 14px; opacity: 0.94; filter: blur(2px); }
-.vibe-stage.vp-above { translate: 0 -8px; opacity: 0.96; filter: blur(1px); }
+.vibe-stage.vp-below { translate: 0 14px; opacity: 0.94; filter: blur(1px); }
+.vibe-stage.vp-above { translate: 0 -8px; opacity: 0.96; filter: blur(0.5px); }
 .vibe-stage.vp-center { translate: 0 0; opacity: 1; filter: none; }
 
 /* status bar — reacts to compilation */
@@ -1367,11 +1498,23 @@ body[data-state="ready"] .reveal {
   font-size: 10px;
   letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: var(--faint);
+  color: var(--muted);
   margin-bottom: 18px;
   display: flex;
   align-items: center;
   gap: 12px;
+}
+/* pane marker — a short accent bar rather than another dot, so Source
+   and Output read as the two labelled ends of one machine and the
+   panes gain a little hierarchy over the body copy below them */
+.vibe-pane-tag::before {
+  content: "";
+  flex: none;
+  width: 2px;
+  height: 10px;
+  border-radius: 1px;
+  background: var(--accent);
+  opacity: 0.7;
 }
 .vibe-pane-tag::after {
   content: "";
@@ -1412,25 +1555,39 @@ body[data-state="ready"] .reveal {
 .vibe-source__str { color: color-mix(in srgb, var(--accent) 42%, #e8e8ef); }
 .vibe-source__punct { color: var(--faint); }
 
-/* compile pass: lines illuminate in sequence, then resolve */
+/* micro-interaction: pointing at a line lights that line's gutter +
+   key/string the same way the compile pass does, at half the volume.
+   Pure hover state — no JavaScript, nothing moves. */
+.vibe-source__line:hover { background: rgba(255, 255, 255, 0.03); }
+.vibe-source__line:hover .vibe-source__gutter {
+  color: color-mix(in srgb, var(--accent) 75%, white);
+  opacity: 0.95;
+}
+.vibe-source__line:hover .vibe-source__key { color: var(--text-dim); }
+.vibe-source__line:hover .vibe-source__str { color: var(--text); }
+
+/* compile pass: lines illuminate top → bottom. 14ms × the 38-line
+   source = ~530ms, so the reading pass lands just inside the 620ms
+   compile budget — the sweep finishes as the output arrives rather
+   than being cut off mid-file. */
 .vibe-stage[data-phase="compiled"] .vibe-source { opacity: 0.5; }
 .vibe-stage[data-phase="compiling"] .vibe-source__line {
   background: rgba(255, 255, 255, 0.035);
-  transition-delay: calc(var(--i) * 18ms);
+  transition-delay: calc(var(--i) * 14ms);
 }
 .vibe-stage[data-phase="compiling"] .vibe-source__gutter {
   color: var(--accent);
   opacity: 1;
   text-shadow: 0 0 8px color-mix(in srgb, var(--accent) 60%, transparent);
-  transition-delay: calc(var(--i) * 18ms);
+  transition-delay: calc(var(--i) * 14ms);
 }
 .vibe-stage[data-phase="compiling"] .vibe-source__key {
   color: var(--text-dim);
-  transition-delay: calc(var(--i) * 18ms);
+  transition-delay: calc(var(--i) * 14ms);
 }
 .vibe-stage[data-phase="compiling"] .vibe-source__str {
   color: #ffffff;
-  transition-delay: calc(var(--i) * 18ms);
+  transition-delay: calc(var(--i) * 14ms);
 }
 
 /* ── compile control column ── */
@@ -1524,7 +1681,11 @@ body[data-state="ready"] .reveal {
 .reveal-scroll:not(.is-visible) .vibe-source__line { opacity: 0; }
 .reveal-scroll.is-visible .vibe-source__line {
   animation: vibe-line-in 0.3s var(--ease-cinema) both;
-  animation-delay: calc(min(var(--i, 0), 24) * 0.03s);
+  /* --d is the wrapping pane's own reveal delay. The stream starts after
+     the pane it lives in has begun landing, otherwise the first rows
+     spend their whole entrance behind an opacity-0 ancestor and the
+     stagger is thrown away. */
+  animation-delay: calc(var(--d, 0s) + 0.12s + (min(var(--i, 0), 24) * 0.03s));
 }
 @keyframes vibe-line-in {
   from { opacity: 0; transform: translateX(-10px); filter: blur(4px); }
@@ -1532,19 +1693,27 @@ body[data-state="ready"] .reveal {
 }
 
 /* WIRES — draw toward the button, illuminate once, settle.
-   `scale` (not transform) draws the line; per-wire origins aim the
-   growth at the button in both orientations (column desktop / row
-   mobile — see responsive override below). brightness pulse composes
-   with the compiling-phase background swap, never replaces it. */
+   `scale` (not transform) draws the line, and the axis has to follow
+   the wire's own orientation: the line is 1px tall on desktop and 1px
+   wide on mobile, so a single Y-axis keyframe would merely thicken a
+   horizontal wire instead of drawing it. Hence two keyframes and an
+   animation-name swap in the responsive block below (the origins there
+   already assume a sideways draw). brightness pulse composes with the
+   compiling-phase background swap, never replaces it. */
 .vibe-deck__action > .vibe-deck__wire:first-child { transform-origin: 50% 100%; }
 .vibe-deck__action > .vibe-deck__wire:last-child { transform-origin: 50% 0%; }
 .reveal-scroll:not(.is-visible) .vibe-deck__wire { opacity: 0; }
 .reveal-scroll.is-visible .vibe-deck__wire {
   animation: vibe-wire-in 0.9s ease both;
-  animation-delay: 0.35s;
+  animation-delay: calc(var(--d, 0s) + 0.32s);
 }
 @keyframes vibe-wire-in {
   0% { opacity: 0; scale: 1 0.25; filter: brightness(1); }
+  45% { opacity: 1; scale: 1 1; filter: brightness(2.1); }
+  100% { opacity: 1; scale: 1 1; filter: brightness(1); }
+}
+@keyframes vibe-wire-in-x {
+  0% { opacity: 0; scale: 0.25 1; filter: brightness(1); }
   45% { opacity: 1; scale: 1 1; filter: brightness(2.1); }
   100% { opacity: 1; scale: 1 1; filter: brightness(1); }
 }
@@ -1555,7 +1724,7 @@ body[data-state="ready"] .reveal {
 .reveal-scroll:not(.is-visible) .vibe-compile { opacity: 0; }
 .reveal-scroll.is-visible .vibe-compile {
   animation: vibe-button-in 0.45s var(--ease-cinema) both;
-  animation-delay: 0.5s;
+  animation-delay: calc(var(--d, 0s) + 0.46s);
 }
 @keyframes vibe-button-in {
   0% { opacity: 0; scale: 0.96; filter: brightness(1.5); }
@@ -1578,6 +1747,8 @@ body[data-state="ready"] .reveal {
 
 /* ── output: idle ghost → editorial interpretation ── */
 .vibe-idle {
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1588,28 +1759,64 @@ body[data-state="ready"] .reveal {
   padding: 40px 24px;
   font-family: var(--font-mono);
 }
+/* the empty pane is genuinely AT REST — a static standby dot, no idle
+   loop. It only animates while the machine is actually working. */
 .vibe-idle__dot {
   width: 6px; height: 6px; border-radius: 50%;
   background: var(--faint);
-  opacity: 0.6;
-  animation: vibe-blink 2.4s ease-in-out infinite;
+  opacity: 0.55;
+  transition: background 0.4s ease, box-shadow 0.4s ease;
 }
 .vibe-stage[data-phase="compiling"] .vibe-idle__dot {
   background: var(--accent);
   box-shadow: 0 0 10px var(--accent);
-  animation-duration: 0.7s;
   opacity: 1;
+  /* the ONLY place this dot animates: while the machine is working */
+  animation: vibe-blink 0.7s ease-in-out infinite;
 }
 .vibe-idle__title {
   font-size: 11px;
   letter-spacing: 0.26em;
   text-transform: uppercase;
   color: var(--muted);
+  /* matches .vibe-idle__note so the compiling lift is one gesture,
+     not a colour snap plus a fade */
+  transition: color 0.4s ease;
 }
 .vibe-idle__note {
   font-size: 11px;
   letter-spacing: 0.06em;
   color: var(--faint);
+  transition: color 0.4s ease;
+}
+
+/* compile feedback: the empty pane reads as busy, not just dim — one
+   slow scan per pass and the copy lifts to accent. Both stop the
+   instant the phase resolves, so the output lands clean. */
+.vibe-idle::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    color-mix(in srgb, var(--accent) 9%, transparent) 50%,
+    transparent 60%
+  );
+}
+.vibe-stage[data-phase="compiling"] .vibe-idle::after {
+  opacity: 1;
+  animation: vibe-scan 1.15s linear infinite;
+}
+.vibe-stage[data-phase="compiling"] .vibe-idle__title {
+  color: color-mix(in srgb, var(--accent) 62%, white);
+}
+.vibe-stage[data-phase="compiling"] .vibe-idle__note { color: var(--muted); }
+@keyframes vibe-scan {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
 }
 
 .vibe-c__block {
@@ -1623,28 +1830,37 @@ body[data-state="ready"] .reveal {
 /* ── compiled output entrance ────────────────────────────────
    The compiled view remounts when compilation finishes — every
    compile starts a clean, single animation run (the previous run's
-   DOM is gone; nothing can stack). Blocks resolve top → down using
-   the existing --i index. `backwards` fill + `from`-only keyframes:
-   the implicit end state is each block's own base style, so every
-   block lands at opacity 1 / transform none / filter none — blur is
-   strictly temporary and the text ends fully crisp. */
+   DOM is gone; nothing can stack). Blocks resolve top → down on the
+   existing --i index, and each one arrives the way everything else on
+   this site arrives: travelling LEFT → RIGHT out of a soft focus.
+   The old rule lifted blocks out of the page; on a column of text
+   that vertical move fought the horizontal language of the interests
+   nested inside it, so it is gone. `backwards` fill + from-only
+   keyframes: the implicit end state is each block's own base style,
+   so every block lands at opacity 1 / transform none / filter none —
+   the blur and the 0.985 scale are strictly temporary, and the text
+   ends completely crisp. */
 .vibe-stage[data-phase="compiled"] .vibe-c__block {
-  animation: vibe-output-in 0.5s var(--ease-glide) backwards;
-  animation-delay: calc(var(--i, 0) * 0.09s);
+  animation: vibe-output-in 0.55s var(--ease-glide) backwards;
+  animation-delay: calc(var(--i, 0) * 0.075s);
 }
 
 @keyframes vibe-output-in {
   from {
     opacity: 0;
-    transform: translateY(-11px);
-    filter: blur(6px);
+    transform: translate3d(-14px, 0, 0) scale(0.985);
+    filter: blur(5px);
   }
 }
 
-/* Interests get their own smaller stagger after their block lands. */
+/* Interests get their own smaller stagger INSIDE their block — the
+   rows are indented in a staircase, so stepping them in on a 40ms grid
+   is what makes the list read as a list rather than a paragraph. Timing
+   is keyed to the block they live in (i = 2), so the two waves read as
+   one motion instead of two competing ones. */
 .vibe-stage[data-phase="compiled"] .vibe-c__interest {
-  animation: vibe-interest-in 0.34s var(--ease-glide) backwards;
-  animation-delay: calc(0.5s + (var(--j, 0) * 0.045s));
+  animation: vibe-interest-in 0.32s var(--ease-glide) backwards;
+  animation-delay: calc(0.36s + (var(--j, 0) * 0.04s));
 }
 
 @keyframes vibe-interest-in {
@@ -1795,9 +2011,11 @@ body[data-state="ready"] .reveal {
     min-width: 0;
     padding: 14px 0;
   }
-  /* horizontal wires grow toward the button sideways */
+  /* horizontal wires grow toward the button sideways — the draw axis has
+     to swap with the orientation, or the line only thickens in place */
   .vibe-deck__action > .vibe-deck__wire:first-child { transform-origin: 0% 50%; }
   .vibe-deck__action > .vibe-deck__wire:last-child { transform-origin: 100% 50%; }
+  .reveal-scroll.is-visible .vibe-deck__wire { animation-name: vibe-wire-in-x; }
   .vibe-deck__wire {
     flex: 1;
     width: auto;
@@ -2054,7 +2272,9 @@ body[data-state="ready"] .reveal {
 .reveal-scroll:not(.is-visible) .thing { opacity: 0; }
 .reveal-scroll.is-visible .thing {
   animation: thing-in 0.55s var(--ease-cinema) both;
-  animation-delay: calc(var(--i, 0) * 0.05s);
+  /* --d is this list's Reveal delay, so the rows stream out of a list
+     that has already begun to land (7 rows end right as it settles) */
+  animation-delay: calc(var(--d, 0s) + 0.1s + (var(--i, 0) * 0.05s));
 }
 @keyframes thing-in {
   from { opacity: 0; transform: translateX(var(--rx)) translateY(12px); filter: blur(8px) brightness(0.65); }
@@ -2092,10 +2312,25 @@ body[data-state="ready"] .reveal {
   padding: 10px 22px 10px 24px;
   background: rgba(255, 255, 255, 0.014);
   white-space: nowrap;
+  transition:
+    border-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.3s var(--ease-cinema);
 }
 .things-loop__step:last-child .things-loop__node {
   border-color: color-mix(in srgb, var(--accent) 40%, transparent);
   color: color-mix(in srgb, var(--accent) 70%, white);
+}
+
+/* micro-interaction: stepping through the loop lifts each node and lets
+   its border catch the light — the diagram reacts to being read. */
+.things-loop__step { transition: transform 0.3s var(--ease-cinema); }
+.things-loop__step:hover .things-loop__node {
+  border-color: var(--line);
+  color: var(--text);
+  box-shadow: 0 0 24px -8px color-mix(in srgb, var(--accent) 45%, transparent);
+  transform: translateY(-2px);
 }
 .things-loop__link {
   font-family: var(--font-mono);
@@ -2249,8 +2484,12 @@ body[data-state="ready"] .reveal {
   align-items: start;
 }
 
-/* ── featured: the one state that dominates ── */
+/* ── featured: the one state that dominates ──
+   data-glow opts the card into the shared pointer light; the [data-glow]
+   rule supplies the stacking context that keeps that light under the
+   card's own content. */
 .cur-featured {
+  position: relative;
   border: 1px solid var(--line-soft);
   border-radius: 20px;
   padding: clamp(28px, 3.5vw, 44px);
@@ -2329,7 +2568,7 @@ body[data-state="ready"] .reveal {
   background: linear-gradient(180deg, transparent, var(--line) 12%, var(--line) 88%, transparent);
   transform: scaleY(0);
   transform-origin: 50% 0;
-  transition: transform 0.9s var(--ease-cinema) 0.08s;
+  transition: transform 0.9s var(--ease-cinema) calc(var(--d, 0s) + 0.12s);
 }
 .reveal-scroll.is-visible .cur-states::before {
   transform: scaleY(1);
@@ -2342,7 +2581,10 @@ body[data-state="ready"] .reveal {
 .reveal-scroll.is-visible .cur-state {
   --rx: calc(-46px + (var(--i, 0) * 5px));
   animation: cur-state-in 0.5s var(--ease-cinema) both;
-  animation-delay: calc(0.05s + (var(--i, 0) * 0.055s));
+  /* --d is this group's Reveal delay: the rows wait for their container
+     to land first, so the cascade is actually seen rather than spent
+     behind a still-invisible parent */
+  animation-delay: calc(var(--d, 0s) + 0.16s + (var(--i, 0) * 0.055s));
 }
 @keyframes cur-state-in {
   from { opacity: 0; transform: translateX(var(--rx)) translateY(8px); filter: blur(6px); }
@@ -2847,28 +3089,56 @@ body[data-state="ready"] .reveal {
    shorter travel, lighter blur, quicker settle. Placed last so these
    equal-specificity overrides always win. */
 @media (max-width: 900px) {
-  .reveal-shift-eyebrow { --rx: -26px; --ry: 5px; --blur-in: 8px; }
-  .reveal-shift-heading { --rx: -42px; --ry: 8px; --blur-in: 12px; }
-  .reveal-shift-content { --rx: -56px; --ry: 10px; --blur-in: 15px; }
-  .reveal-shift-deep { --rx: -66px; --ry: 12px; --blur-in: 16px; }
-  .reveal-shift-visual { --rx: -74px; --ry: 13px; --blur-in: 17px; }
+  /* the base override must come FIRST: it and the .reveal-shift-* rules
+     below share specificity, so declaring it last (as it was) quietly
+     flattened every depth layer onto one radius — the per-depth blur
+     ramp only exists if the shift rules get the last word */
+  .reveal-scroll { --blur-in: 12px; }
+  .reveal-shift-eyebrow { --rx: -26px; --ry: 5px; --blur-in: 7px; }
+  .reveal-shift-heading { --rx: -42px; --ry: 8px; --blur-in: 11px; }
+  .reveal-shift-content { --rx: -56px; --ry: 10px; --blur-in: 13px; }
+  .reveal-shift-deep { --rx: -66px; --ry: 12px; --blur-in: 14px; }
+  .reveal-shift-visual { --rx: -74px; --ry: 13px; --blur-in: 15px; }
   .thing { --rx: -48px; }
   .reveal-scroll.is-visible .cur-state { --rx: calc(-40px + (var(--i, 0) * 4px)); }
-  /* blur radii that felt right on desktop are heavy on small screens */
-  .reveal-scroll { --blur-in: 14px; }
+  /* the deck's output pane carries its own higher-specificity motion
+     tokens, authored for a wide canvas — a -72px slide and a 22px
+     dissolve are a fifth of a phone screen and a wall of mush. It is the
+     one revealed block the shift rules cannot reach, so it is compressed
+     explicitly rather than left at desktop intensity. */
+  .vibe-deck__grid > .reveal-scroll:last-child {
+    --rx: -34px;
+    --ry: 8px;
+    --dur: 0.8s;
+    --blur-in: 11px;
+  }
 }
 
 @media (max-width: 640px) {
-  .reveal-shift-eyebrow { --rx: -16px; --ry: 4px; --blur-in: 6px; }
-  .reveal-shift-heading { --rx: -26px; --ry: 5px; --blur-in: 8px; }
-  .reveal-shift-content { --rx: -34px; --ry: 6px; --blur-in: 10px; }
-  .reveal-shift-deep { --rx: -40px; --ry: 7px; --blur-in: 11px; }
-  .reveal-shift-visual { --rx: -44px; --ry: 8px; --blur-in: 12px; }
+  /* one shared entrance curve — long glides read as lag on phones.
+     Declared first so the shift rules below still resolve the depth
+     ramp, exactly as at 900px. */
+  .reveal-scroll { --dur: 0.7s; --blur-in: 8px; }
+  .reveal-shift-eyebrow { --rx: -16px; --ry: 4px; --blur-in: 5px; }
+  .reveal-shift-heading { --rx: -26px; --ry: 5px; --blur-in: 7px; }
+  .reveal-shift-content { --rx: -34px; --ry: 6px; --blur-in: 8px; }
+  .reveal-shift-deep { --rx: -40px; --ry: 7px; --blur-in: 9px; }
+  .reveal-shift-visual { --rx: -44px; --ry: 8px; --blur-in: 10px; }
   .thing { --rx: -30px; }
   .reveal-scroll.is-visible .cur-state { --rx: calc(-28px + (var(--i, 0) * 3px)); }
-  /* one shared entrance curve — long glides read as lag on phones */
-  .reveal-scroll { --dur: 0.7s; --blur-in: 10px; }
+  /* output pane: compressed with everything else (see the 900px note) */
+  .vibe-deck__grid > .reveal-scroll:last-child {
+    --rx: -22px;
+    --ry: 6px;
+    --dur: 0.7s;
+    --blur-in: 8px;
+  }
   .reveal-tempo-slow { --dur: 0.9s; }
+  /* word cascades compress with everything else at this width */
+  .reveal-scroll.is-visible .split__word {
+    animation-duration: 0.5s;
+    animation-delay: calc(var(--d, 0s) + 0.06s + (var(--wi, 0) * 0.012s));
+  }
   /* deck + section glides pinned to center on phones: phase flips at
      viewport fractions feel like jitter at this width — rest only */
   .vibe-stage,
@@ -2883,5 +3153,281 @@ body[data-state="ready"] .reveal {
     opacity: 1;
     filter: none;
     transition: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   19. SCROLL-LINKED MOTION — cascades, defocus, handoff, pointer light
+   ───────────────────────────────────────────────────────────────
+   Every layer here rides machinery that already exists:
+
+   · word cascades key off .reveal-scroll.is-visible (set by the one
+     reveal observer) — no extra observers, no extra JS;
+   · velocity defocus and the hero handoff key off the custom
+     properties written by the ONE scroll listener in motion.js
+     initScrollMotion() — no per-component scroll listeners anywhere;
+   · the pointer light (PointerGlow.jsx / HeroSkills.jsx) is a single
+     listener per opted-in surface, writing two numbers.
+
+   Nothing here starts a loop, adds a listener, or touches layout:
+   only transform / opacity / filter / translate, all of which settle
+   back to a completely crisp resting state. Values stay deliberately
+   low so text is readable even mid-scroll, and at rest the gate
+   attribute is removed, which drops every filter on the page.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── word cascade ──
+   Lead sentences only (see SplitText.jsx). Spaces stay real text nodes,
+   so the sentence still reads as one string. `both` fill + from-only
+   keyframes: during the stagger delay each word holds the invisible
+   start state, and once landed it resolves to its own base style —
+   opacity 1 / no transform / no filter, permanently crisp. */
+.split { display: inline; }
+.split__word {
+  display: inline-block;
+  /* no per-word will-change: ~40 tiny layers hoisted at once costs more
+     than the blur it would speed up */
+}
+.reveal-scroll.is-visible .split__word {
+  animation: split-word-in 0.62s var(--ease-glide) both;
+  /* 18ms grid: even the longest lead sentence (44 words) finishes its
+     cascade in under a second, so the tail never lags the paragraph */
+  animation-delay: calc(var(--d, 0s) + 0.08s + (var(--wi, 0) * 0.018s));
+}
+@keyframes split-word-in {
+  from { opacity: 0; transform: translate3d(-9px, 6px, 0); filter: blur(4px); }
+}
+
+/* ── velocity defocus ──
+   Applied to visual content only. Excluded on purpose:
+     · the fixed background layers and cursor aura (never filtered);
+     · the compile control column (.vibe-deck__action) — the deck's
+       panes and status bar soften, the button the visitor is about to
+       press does not;
+     · the hero's identity block (see the handoff below);
+     · every gradient-clipped section heading, which is never wrapped
+       by a gated layer at all.
+   No CSS transition: motion.js already interpolates per frame, so the
+   recovery is exactly as short as the loop says it is, and there is no
+   second easing curve to fight. */
+html[data-scroll-motion="on"]
+  :is(
+    .about__inner,
+    .things__inner,
+    .currently__inner,
+    .final__inner,
+    .vibe__head,
+    .vibe-deck__bar,
+    .vibe-deck__pane > *
+  ) {
+  filter: blur(var(--sblur));
+  translate: 0 var(--sdepth);
+}
+
+/* ── hero handoff ──
+   The first viewport gives way as one piece. --hero-out ramps 0 → 1
+   across the hero's scroll range, so the content lifts and fades in
+   step with the scroll and is fully retired exactly as the About seam
+   reaches the top. Because it is a POSITION and not a velocity, it
+   stops the moment the visitor stops, never oscillates and costs
+   nothing while idle.
+
+   `translate` is unclaimed on all four blocks, so one rule owns it and
+   nothing has to out-specify anything else. The fades ride the same
+   body[data-state="ready"] gate the hero's entrances already use, so
+   they sit in the SAME cascade slot as .reveal instead of fighting it.
+
+   The headline is exempt from both the fade and the blur: it is the
+   subject of the first screen, so the room around it softens while the
+   name holds focus — a focus pull, not a blanket blur. The tile
+   recedes with scale only, which moves pixels without moving layout. */
+.hero__label,
+.hero__identity,
+.hero__meta,
+.hero__skills {
+  --hero-lift: -22px;
+  translate: 0 calc(var(--hero-out) * var(--hero-lift));
+}
+.hero__identity { --hero-lift: -32px; }
+
+body[data-state="ready"] .hero__label,
+body[data-state="ready"] .hero__meta,
+body[data-state="ready"] .hero__skills,
+body[data-state="ready"] .hero__identity {
+  opacity: calc(1 - (var(--hero-out) * 0.55));
+}
+body[data-state="ready"] .hero-avatar {
+  scale: calc(1 - (var(--hero-out) * 0.045));
+}
+/* the invitation to scroll retires long before the hero does */
+body[data-state="ready"] .scroll-hint {
+  opacity: max(0, calc(1 - (var(--hero-out) * 4)));
+}
+html[data-scroll-motion="on"] :is(.hero__label, .hero__meta, .hero__skills) {
+  filter: blur(var(--sblur));
+}
+
+/* ── pointer light (PointerGlow.jsx, HeroSkills.jsx) ──
+   A panel opts in with [data-glow]; the shared layer reads --mx/--my
+   and paints a soft accent wash. `isolation` plus z-index -1 keeps it
+   inside the panel's own stacking context and BELOW its content, so a
+   light travelling across a card can never touch contrast, hover or
+   hit-testing. Fades with the pointer; no idle motion. */
+[data-glow] { position: relative; isolation: isolate; }
+.glow-layer {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  background: radial-gradient(
+    240px 240px at var(--mx, 50%) var(--my, 50%),
+    color-mix(in srgb, var(--accent) 10%, transparent),
+    transparent 70%
+  );
+}
+[data-glow="on"] > .glow-layer { opacity: 1; }
+
+/* ── button sheen ──
+   One restrained light pass across the three primary controls on
+   hover. Returns instantly (no reverse sweep) and never moves layout. */
+.vibe-compile,
+.cur-note__button,
+.final-thought__button {
+  position: relative;
+  overflow: hidden;
+}
+.vibe-compile::after,
+.cur-note__button::after,
+.final-thought__button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 42%,
+    rgba(255, 255, 255, 0.085) 50%,
+    transparent 58%
+  );
+  transform: translateX(-130%);
+}
+.vibe-compile:hover::after,
+.cur-note__button:hover::after,
+.final-thought__button:hover::after {
+  transition: transform 0.75s var(--ease-glide);
+  transform: translateX(130%);
+}
+
+/* ── quiet row micro-interactions ──
+   Attribute cells, and the two closing loops: the group recedes, the
+   pointed-at item comes forward. Pure CSS, keyboard-parity where the
+   row is focusable. */
+.about__attr {
+  transition: transform 0.3s var(--ease-cinema);
+}
+.about__attr:hover {
+  transform: translateY(-2px);
+}
+.about__attr-label,
+.about__attr-value {
+  transition: color 0.3s ease;
+}
+.about__attr:hover .about__attr-label { color: var(--muted); }
+.about__attr:hover .about__attr-value { color: var(--text); }
+
+.cur-loop__item,
+.final-loop__item {
+  transition: opacity 0.3s ease;
+}
+.cur-loop:hover .cur-loop__item,
+.final-loop:hover .final-loop__item {
+  opacity: 0.5;
+}
+.cur-loop__item:hover,
+.final-loop__item:hover {
+  opacity: 1;
+}
+
+/* ═══ reduced motion — final word ═══
+   Placed last so it wins the cascade unconditionally: every layer added
+   in this section resolves to a static, fully visible, fully crisp
+   state. Content is never hidden or softened; only motion is removed. */
+@media (prefers-reduced-motion: reduce) {
+  html[data-scroll-motion="on"]
+    :is(
+      .about__inner,
+      .things__inner,
+      .currently__inner,
+      .final__inner,
+      .vibe__head,
+      .vibe-deck__bar,
+      .vibe-deck__pane > *
+    ) {
+    filter: none !important;
+    translate: none !important;
+  }
+  html[data-scroll-motion="on"] :is(.hero__label, .hero__meta, .hero__skills) {
+    filter: none !important;
+  }
+  .reveal-scroll.is-visible .split__word {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+  /* the hero handoff never engages: --hero-out stays at its 0 default,
+     but state down explicitly so nothing can drift if a value leaks */
+  .hero__label,
+  .hero__identity,
+  .hero__meta,
+  .hero__skills,
+  .hero-avatar,
+  .scroll-hint {
+    translate: none !important;
+    scale: none !important;
+    opacity: 1 !important;
+  }
+  /* the dial reads its angle from --scroll-y, which is never published
+     here; pin it so the ring cannot inherit a rotation either */
+  .about-visual__ring { rotate: none !important; }
+  /* the seam marker is drawn, not animated: arrive at rest instantly */
+  .about__inner::before,
+  .vibe__inner::before,
+  .things__inner::before,
+  .currently__inner::before,
+  .final__inner::before {
+    transform: scaleX(1);
+    opacity: 0.5;
+    transition: none;
+  }
+  .vibe-idle::after,
+  .vibe-compile::after,
+  .cur-note__button::after,
+  .final-thought__button::after {
+    display: none;
+  }
+  .vibe-stage[data-phase="compiling"] .vibe-idle::after { display: none; }
+  .things-loop__step:hover .things-loop__node,
+  .about__attr:hover { transform: none; }
+  .cur-loop:hover .cur-loop__item,
+  .final-loop:hover .final-loop__item { opacity: 1; }
+  /* the page's only animations without an end: the hero boot dot, the
+     avatar fallback shimmer, the scroll invitation and the three status
+     pulses. Everything else here resolves to rest; these loop forever,
+     so they are the one category reduced motion removes outright. Each
+     element keeps its plain resting appearance — nothing is left parked
+     mid-cycle. `!important` because every one of them is declared
+     later in the file at equal specificity. */
+  .hero__boot-dot,
+  .hero-avatar__fallback-shimmer,
+  .scroll-hint__text,
+  .scroll-hint__arrow,
+  .vibe-c__pulse,
+  .things__pulse,
+  .cur-featured__dot {
+    animation: none !important;
   }
 }

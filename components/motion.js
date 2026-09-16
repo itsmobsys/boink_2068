@@ -1,11 +1,13 @@
 /* motion — the single shared motion core for the whole site.
-   One IntersectionObserver for reveals, one for scene continuity —
-   never one observer per element, never scroll listeners, never an
-   animation library. Motion language: content travels LEFT → RIGHT
-   into place (horizontal + depth, never bottom → top), layered by
-   depth (eyebrow / heading / content / deep / visual), staggered on
-   a 65ms grid, settled with blur → crisp. All visuals live in
-   globals.css; this module only owns viewport observation. */
+   One IntersectionObserver for reveals, one for scene continuity,
+   one for viewport phases, and ONE scroll listener driving the
+   scroll-velocity defocus — never one observer/listener per element,
+   never an animation library. Motion language: content travels
+   LEFT → RIGHT into place (horizontal + depth, never bottom → top),
+   layered by depth (eyebrow / heading / content / deep / visual),
+   staggered on a 65ms grid, settled with blur → crisp. All visuals
+   live in globals.css; this module only owns viewport observation
+   and the shared scroll state. */
 
 export function prefersReducedMotion() {
   return (
@@ -101,6 +103,164 @@ export function observeViewportPhase(el) {
     if (phaseIO) phaseIO.unobserve(el);
   };
 }
+
+/* ── shared scroll state (velocity defocus + hero handoff) ──
+   ONE passive scroll listener + ONE rAF loop for the entire page.
+   While the page is moving it publishes four inherited custom
+   properties on <html>:
+     --sblur      px of temporary defocus   (0 at rest)
+     --sdepth     px of temporary drift     (0 at rest)
+     --hero-out   0→1 hero exit progress    (0 at rest)
+     --scroll-y   document position, unitless px, 4px steps
+   plus the flag html[data-scroll-motion="on"]. Only gated layers in
+   globals.css consume --sblur / --sdepth — section content, cards,
+   decorative layers, the Source → Compile → Output panes — so
+   navigation, focused controls and the compile button never soften.
+   At rest the flag is REMOVED, which drops every filter entirely:
+   nothing stays blurred, no layer keeps a filter, and text is always
+   crisp at rest. Rise is smoothed, recovery is faster and short
+   (~150ms), values stay deliberately low so text stays readable
+   mid-scroll.
+
+   The hero handoff and document position are shaped here rather than
+   in CSS: they are positions, not velocities, so they stay exact when
+   scrolling stops and cost nothing while idle. Every value is
+   quantised, so on most frames the loop writes nothing at all — and
+   it stops the moment nothing changes. Reduced motion: never installs
+   and never publishes, so every consumer rests at its static state.
+
+   Reads one scrollY per frame (no layout thrash, no writes outside
+   the frame), and pauses completely when the tab is hidden. */
+
+const BLUR_CAP = { wide: 1.1, narrow: 0.7 }; // px — subtle by design
+const SPEED_REF = 34; // px per 60fps frame ≈ a brisk wheel scroll
+const RISE = 0.26; // approach smoothing
+const FALL = 0.36; // recovery smoothing (short, so text snaps crisp)
+const quantise = (v) => Math.round(v * 4) / 4; // 0.25px grid
+const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
+
+let scrollMotion = null;
+
+export function initScrollMotion() {
+  if (typeof window === "undefined") return () => {};
+  if (scrollMotion) return scrollMotion;
+  if (prefersReducedMotion()) {
+    scrollMotion = () => {};
+    return scrollMotion;
+  }
+
+  const root = document.documentElement;
+  let raf = 0;
+  let lastY = window.scrollY;
+  let lastT = 0;
+  let value = 0;
+  let published = -1;
+  let heroPub = -1;
+  let yPub = -1;
+  let gated = false;
+
+  const gate = (on) => {
+    if (on === gated) return false;
+    gated = on;
+    if (on) root.dataset.scrollMotion = "on";
+    else delete root.dataset.scrollMotion;
+    return true;
+  };
+
+  const frame = (t) => {
+    raf = 0;
+    const y = Math.max(0, window.scrollY);
+    const dt = Math.max(8, Math.min(64, lastT ? t - lastT : 16)) / 16.67;
+    lastT = t;
+    const speed = Math.abs(y - lastY) / dt; // px per 60fps frame
+    lastY = y;
+    let wrote = false;
+
+    const cap = window.innerWidth <= 900 ? BLUR_CAP.narrow : BLUR_CAP.wide;
+    const target = speed < 1.5 ? 0 : cap * Math.min(1, speed / SPEED_REF);
+    value += (target - value) * (target > value ? RISE : FALL);
+    if (target === 0 && value < 0.02) value = 0;
+
+    const px = quantise(value);
+    if (px !== published) {
+      published = px;
+      root.style.setProperty("--sblur", px + "px");
+      root.style.setProperty("--sdepth", (-px * 0.7).toFixed(2) + "px");
+      wrote = true;
+    }
+    /* Hysteresis on the flag: it opens as soon as the blur is worth
+       painting and closes only once the value is genuinely gone, so a
+       gesture with an uneven frame delta cannot flicker a filter on and
+       off. Both thresholds are far below one visible pixel. */
+    if (gate(gated ? value > 0.04 : px > 0)) wrote = true;
+
+    /* Hero handoff — the first viewport starts giving way once the
+       page is a fifth of the way down and is fully retired by the
+       time the About seam reaches the top. The curve lives here so
+       CSS stays a plain multiply with no easing stack to fight. */
+    const out = clamp01((y / (window.innerHeight || 800) - 0.18) / 0.82);
+    const outQ = Math.round(out * 200) / 200;
+    if (outQ !== heroPub) {
+      heroPub = outQ;
+      root.style.setProperty("--hero-out", String(outQ));
+      wrote = true;
+    }
+
+    /* Document position in 4px steps: decorative scroll-linked layers
+       (the About dial) read it instead of running an infinite loop. */
+    const yQ = Math.round(y / 4) * 4;
+    if (yQ !== yPub) {
+      yPub = yQ;
+      root.style.setProperty("--scroll-y", String(yQ));
+      wrote = true;
+    }
+
+    if (value > 0 || wrote) {
+      raf = requestAnimationFrame(frame);
+    } else {
+      lastT = 0; // next burst measures from a clean frame delta
+    }
+  };
+
+  const kick = () => {
+    if (!raf && !document.hidden) raf = requestAnimationFrame(frame);
+  };
+
+  const settle = () => {
+    if (raf) cancelAnimationFrame(raf);
+    raf = 0;
+    lastT = 0;
+    value = 0;
+    published = 0;
+    // re-anchor so a restored tab can't read as one huge scroll delta
+    lastY = window.scrollY;
+    root.style.setProperty("--sblur", "0px");
+    root.style.setProperty("--sdepth", "0px");
+    gate(false);
+  };
+
+  window.addEventListener("scroll", kick, { passive: true });
+  document.addEventListener("visibilitychange", settle);
+
+  scrollMotion = () => {
+    window.removeEventListener("scroll", kick);
+    document.removeEventListener("visibilitychange", settle);
+    settle();
+    scrollMotion = null;
+  };
+  return scrollMotion;
+}
+
+/* Same one-observer-per-concern contract as revealIO / phaseIO above.
+   This declaration is load-bearing: the observer used to be assigned to
+   an undeclared identifier, which threw a ReferenceError in strict mode
+   (every bundle) the first time a scene node was observed. That error
+   escaped SceneContinuity's effect and silently took everything wired
+   after it with it — section hairlines, past-scene dimming, the
+   body[data-scene] lighting handoff, the site-wide viewport glide and
+   the shared scroll state. Declared here so the module can never
+   regress into that state again. */
+let sceneIO = null;
 
 export function observeScene(el) {
   if (!el || typeof el.dataset === "undefined") return () => {};

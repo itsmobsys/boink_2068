@@ -8,6 +8,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { observeViewportPhase } from "./motion";
+import PointerGlow from "./PointerGlow";
 import Reveal from "./Reveal";
 import VibeCompiled from "./VibeCompiled";
 import VibeSource from "./VibeSource";
@@ -64,7 +65,11 @@ export default function VibeCompiler({ vibe }) {
       data-phase={phase}
       data-motion="viewport-phase"
     >
-      <div className="vibe-deck">
+      <div className="vibe-deck" data-glow>
+        {/* decorative pointer light, under the content: the chassis has
+            depth, the machine state never changes because of it */}
+        <PointerGlow />
+
         {/* status bar — the visual anchor that reacts to compilation */}
         <Reveal shift="eyebrow">
           <div className="vibe-deck__bar">
@@ -123,10 +128,12 @@ export default function VibeCompiler({ vibe }) {
                 <div className="vibe-idle">
                   <span className="vibe-idle__dot" aria-hidden="true" />
                   <p className="vibe-idle__title">
-                    {isCompiling ? "Resolving source" : "Awaiting input"}
+                    {isCompiling ? "Compiling" : "Nothing compiled yet"}
                   </p>
                   <p className="vibe-idle__note">
-                    {isCompiling ? "Personality taking shape." : "Press compile to resolve the source."}
+                    {isCompiling
+                      ? "Translating the file into plain English…"
+                      : "Press Compile to read this file in plain English."}
                   </p>
                 </div>
               )}

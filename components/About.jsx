@@ -5,6 +5,7 @@
 
 import AboutVisual from "./AboutVisual";
 import Reveal from "./Reveal";
+import SplitText from "./SplitText";
 
 export default function About({ about }) {
   return (
@@ -38,7 +39,9 @@ export default function About({ about }) {
               </p>
             </Reveal>
             <Reveal delay="0.13s">
-              <p className="about__lede">{about.lede}</p>
+              <p className="about__lede">
+                <SplitText text={about.lede} />
+              </p>
             </Reveal>
             <Reveal delay="0.195s">
               <p className="about__body">{about.body}</p>

@@ -8,6 +8,7 @@ import FinalIdentity from "./FinalIdentity";
 import FinalLoop from "./FinalLoop";
 import RandomThought from "./RandomThought";
 import Reveal from "./Reveal";
+import SplitText from "./SplitText";
 
 export default function Final({ final, displayName, avatarUrl }) {
   return (
@@ -32,7 +33,9 @@ export default function Final({ final, displayName, avatarUrl }) {
         </Reveal>
 
         <Reveal delay="0.22s" tempo="slow">
-          <p className="final__sub">{final.sub}</p>
+          <p className="final__sub">
+            <SplitText text={final.sub} />
+          </p>
         </Reveal>
 
         <Reveal delay="0.3s" tempo="slow">

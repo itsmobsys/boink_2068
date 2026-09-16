@@ -2,13 +2,15 @@
 
 /* SceneContinuity — mounts once (inside Hero), observes everything.
    Wires every [data-scene] node (hero + the five sections) into the
-   single shared scene observer from motion.js. Renders nothing, ships
-   no visuals, owns no state: section hairlines, the hero → about
-   lighting transition, and the subtle past-scene dimming all key off
-   the is-inview / is-past classes and body[data-scene] this sets. */
+   single shared scene observer from motion.js, adds the viewport-phase
+   glide classes, and starts the one shared scroll-velocity defocus
+   loop. Renders nothing, ships no visuals, owns no state: section
+   hairlines, the hero → about lighting transition, the subtle
+   past-scene dimming and the temporary scroll defocus all key off the
+   classes / custom properties this sets. */
 
 import { useEffect } from "react";
-import { observeScene, observeViewportPhase } from "./motion";
+import { initScrollMotion, observeScene, observeViewportPhase } from "./motion";
 
 export default function SceneContinuity() {
   useEffect(() => {
@@ -30,6 +32,12 @@ export default function SceneContinuity() {
       el.classList.add("scene-root");
       cleanups.push(observeViewportPhase(el));
     });
+
+    /* Shared scroll state — ONE scroll listener + ONE rAF loop for the
+       whole page. Publishes --sblur / --sdepth and
+       html[data-scroll-motion="on"] while the page is moving; only the
+       gated layers in globals.css react. Returns a disposer. */
+    cleanups.push(initScrollMotion());
 
     return () => {
       for (const fn of cleanups) fn();

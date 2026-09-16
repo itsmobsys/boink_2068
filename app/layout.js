@@ -26,7 +26,8 @@ const mono = JetBrains_Mono({
 
 export const metadata = {
   title: "Digital Identity",
-  description: "A digital identity. Revealed.",
+  description:
+    "A personal site built on top of my Discord profile — who I am, how I work, what I keep building, and what I'm into right now.",
   /* empty data-URI favicon: kills the /favicon.ico 404 without adding
      an asset or changing the design (no brand mark exists yet) */
   icons: { icon: "data:," },
