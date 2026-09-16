@@ -18,12 +18,12 @@ export default function Vibe({ vibe }) {
               {vibe.index} / {vibe.eyebrow}
             </p>
           </Reveal>
-          <Reveal delay="0.065s" shift="heading">
+          <Reveal delay="0.1s" shift="heading">
             <h2 className="vibe__title" id="vibe-heading">
               {vibe.heading}
             </h2>
           </Reveal>
-          <Reveal delay="0.13s">
+          <Reveal delay="0.2s">
             <p className="vibe__description">
               <SplitText text={vibe.description} />
             </p>

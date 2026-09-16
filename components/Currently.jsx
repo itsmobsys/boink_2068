@@ -21,15 +21,15 @@ export default function Currently({ currently }) {
               {currently.index} / {currently.eyebrow}
             </p>
           </Reveal>
-          <Reveal delay="0.065s" shift="heading">
+          <Reveal delay="0.1s" shift="heading">
             <h2 className="currently__title" id="currently-heading">
               {currently.heading}
             </h2>
           </Reveal>
-          <Reveal delay="0.13s">
+          <Reveal delay="0.2s">
             <p className="currently__intro">{currently.intro}</p>
           </Reveal>
-          <Reveal delay="0.195s" shift="deep">
+          <Reveal delay="0.3s" shift="deep">
             <p className="currently__meta">
               <span>{currently.snapshotLabel}</span>
               <span className="currently__meta-sep" aria-hidden="true">
@@ -46,16 +46,16 @@ export default function Currently({ currently }) {
             <CurrentlyFeatured featured={currently.featured} />
           </Reveal>
         {/* snapshot island enters last */}
-        <Reveal delay="0.2s" shift="deep">
+        <Reveal delay="0.3s" shift="deep">
             <CurrentlyStates states={currently.states} />
           </Reveal>
         </div>
 
-        <Reveal delay="0.1s" shift="deep">
+        <Reveal delay="0.2s" shift="deep">
           <CurrentlyNote snapshots={currently.snapshots} buttonLabel={currently.snapshotButton} />
         </Reveal>
 
-        <Reveal delay="0.24s" shift="deep">
+        <Reveal delay="0.3s" shift="deep">
           <CurrentlyLoop steps={currently.loop} />
         </Reveal>
       </div>

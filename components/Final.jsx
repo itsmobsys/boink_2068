@@ -22,23 +22,23 @@ export default function Final({ final, displayName, avatarUrl }) {
         </Reveal>
 
         {/* identity mark arrives first — the camera's resting point */}
-        <Reveal delay="0.06s" shift="heading" tempo="slow">
+        <Reveal delay="0.1s" shift="heading" tempo="slow">
           <FinalIdentity displayName={displayName} avatarUrl={avatarUrl} />
         </Reveal>
 
-        <Reveal delay="0.14s" shift="heading" tempo="slow">
+        <Reveal delay="0.2s" shift="heading" tempo="slow">
           <h2 className="final__statement" id="final-heading">
             {final.statement}
           </h2>
         </Reveal>
 
-        <Reveal delay="0.22s" tempo="slow">
+        <Reveal delay="0.3s" tempo="slow">
           <p className="final__sub">
             <SplitText text={final.sub} />
           </p>
         </Reveal>
 
-        <Reveal delay="0.3s" tempo="slow">
+        <Reveal delay="0.4s" tempo="slow">
           <RandomThought
             thoughts={final.thoughts}
             buttonLabel={final.thoughtLabel}
@@ -46,11 +46,11 @@ export default function Final({ final, displayName, avatarUrl }) {
           />
         </Reveal>
 
-        <Reveal delay="0.36s" tempo="slow">
+        <Reveal delay="0.5s" tempo="slow">
           <FinalLoop steps={final.loop} />
         </Reveal>
 
-        <Reveal delay="0.42s" shift="eyebrow" tempo="slow">
+        <Reveal delay="0.6s" shift="eyebrow" tempo="slow">
           <div className="final__exit">
             <a className="final__top" href="#hero">
               {final.backToTop}

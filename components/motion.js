@@ -1,13 +1,14 @@
-/* motion — the single shared motion core for the whole site.
-   One IntersectionObserver for reveals, one for scene continuity,
-   one for viewport phases, and ONE scroll listener driving the
-   scroll-velocity defocus — never one observer/listener per element,
-   never an animation library. Motion language: content travels
-   LEFT → RIGHT into place (horizontal + depth, never bottom → top),
-   layered by depth (eyebrow / heading / content / deep / visual),
-   staggered on a 65ms grid, settled with blur → crisp. All visuals
-   live in globals.css; this module only owns viewport observation
-   and the shared scroll state. */
+/* motion — viewport observation + shared scroll state for the site.
+   One IntersectionObserver hooking reveals (class only), one for scene
+   continuity, one for viewport phases, and ONE scroll listener
+   publishing shared scroll state — never one observer/listener per
+   element. Wrapper entrances themselves are motion/react (see
+   Reveal.jsx): classic scroll-triggered BOTTOM → TOP, opacity 0 /
+   y 48 / blur 14px → opacity 1 / y 0 / blur 0px, ~0.7s premium
+   ease-out, viewport once, ~100ms stagger. This module's reveal
+   observer only adds .is-visible for descendant CSS cascades; it owns
+   no entrance motion. No mouse, scroll-linked, parallax or looping
+   motion for reveals. */
 
 export function prefersReducedMotion() {
   return (
@@ -17,10 +18,15 @@ export function prefersReducedMotion() {
   );
 }
 
-/* Per-element reveals fire slightly BEFORE the element centers:
-   a low threshold plus a small positive bottom margin means the
-   entrance begins naturally while the section is still arriving. */
-const REVEAL_OPTS = { threshold: 0.12, rootMargin: "0px 0px 6% 0px" };
+/* Reveal hook — fires ON entry, not before: a negative bottom margin
+   shrinks the intersection area above the fold edge, so the callback
+   runs only once the element has actually crossed into the viewport.
+   Since the motion/react cutover (see Reveal.jsx) this observer owns
+   NO entrance animation of its own: it only adds .is-visible, which
+   triggers descendant CSS cascades (Things rows, Currently states,
+   Vibe source lines, word cascades). Wrapper entrances are motion's
+   whileInView with matching viewport settings. */
+const REVEAL_OPTS = { threshold: 0.15, rootMargin: "0px 0px -5% 0px" };
 
 let revealIO = null;
 

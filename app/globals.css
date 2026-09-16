@@ -45,6 +45,11 @@ html {
   background: var(--bg);
   scrollbar-width: thin;
   scrollbar-color: #2a2a33 transparent;
+  /* native smooth scrolling for anchor / section / keyboard /
+     programmatic navigation. Reduced motion overrides to `auto`
+     below; the no-preference block near the Final section restates
+     it so the intent survives cascade order. */
+  scroll-behavior: smooth;
 }
 
 body {
@@ -761,19 +766,22 @@ body[data-state="ready"] .reveal {
   .hero__skill { opacity: 1; }
   body[data-state="ready"] .hero__skill,
   body[data-state="ready"] .hero__skill i { animation: none; }
-  /* !important below: section styles re-declare these same properties
-     at equal specificity LATER in the file — reduced motion must win
-     the cascade regardless of source order */
+  /* !important below: this must win over motion/react's per-frame
+     INLINE styles (opacity / transform / filter) — !important
+     declarations beat non-important inline styles, so reduced-motion
+     users get content immediately visible with no movement, no blur,
+     no stagger and no delay, even mid-flight. Also wins over any
+     later equal-specificity section rules regardless of source order. */
   .reveal-scroll {
-    --blur-in: 0px;
     opacity: 1 !important;
-    transform: translate3d(0, 0, 0) !important;
+    transform: none !important;
     /* `none`, not blur(0): a filter of any value keeps ~35 revealed
        blocks promoted to their own filtered layer for the whole page,
        for no visual gain */
     filter: none !important;
     transition: none !important;
     transition-delay: 0s !important;
+    animation: none !important;
     will-change: auto;
   }
   .reveal-scroll.is-visible .about-visual__sweep { animation: none; }
@@ -831,7 +839,7 @@ body[data-state="ready"] .reveal {
   }
   /* vibe: state changes apply instantly, no staggered waits; the deck
      entrance resolves instantly and the output pane lands crisp via
-     the shared reveal rule (--blur-in: 0 above) */
+     the reduced-motion .reveal-scroll neutralizer above */
   .reveal-scroll:not(.is-visible) .vibe-source__line,
   .reveal-scroll:not(.is-visible) .vibe-deck__wire,
   .reveal-scroll:not(.is-visible) .vibe-compile { opacity: 1 !important; }
@@ -1104,62 +1112,34 @@ body[data-state="ready"] .reveal {
   color: var(--text-dim);
 }
 
-/* ── viewport reveal primitive (pairs with Reveal.jsx + motion.js) ──
-   ONE shared system for the whole page. Signature motion: content
-   travels LEFT → RIGHT into its final position — horizontal + depth,
-   never bottom → top — layered per group through --rx / --ry.
-   GPU-only properties (transform / opacity / filter), no layout
-   thrash. Stagger runs on a 65ms grid via --d; intensity via --dur
-   and the .reveal-tempo-slow finale treatment. Resting states are
-   completely stable: transitions end, will-change releases. */
+/* ── viewport reveal primitive (pairs with Reveal.jsx) ──
+   The entrance itself is owned ENTIRELY by motion/react (see
+   Reveal.jsx: initial opacity 0 / y 48 / blur 14px → opacity 1 /
+   y 0 / blur 0px, 0.7s premium ease-out, viewport once, ~100ms
+   stagger via --d). This class therefore carries NO hidden state,
+   NO transform/filter, and NO transition of its own — an earlier
+   revision animated those same properties in CSS here, which would
+   now fight motion's per-frame inline styles and smear every frame.
+   .reveal-scroll survives as: (a) a greppable hook, (b) the scope
+   that inherits --d down to descendant CSS cascades (Things rows,
+   Currently states, Vibe source lines, word cascades), and
+   (c) the .is-visible hook below, which motion.js still adds on
+   entry SOLELY to trigger those descendant cascades. */
 .reveal-scroll {
-  --rx: -88px;
-  --ry: 18px;
-  --rx-end: 0px;
-  --ry-end: 0px;
-  --dur: 0.95s;
-  --blur-in: 18px;
-  opacity: 0;
-  transform: translate3d(var(--rx), var(--ry), 0);
-  filter: blur(var(--blur-in));
-  transition:
-    opacity var(--dur) var(--ease-glide),
-    transform var(--dur) var(--ease-glide),
-    filter var(--dur) var(--ease-glide);
-  transition-delay: var(--d, 0s);
-  will-change: opacity, transform, filter;
+  --d: 0s;
 }
-/* One crisp settled state for every reveal: opacity 1 / translate 0 /
-   NO filter. The --rx-end / --ry-end escape hatches (0 by default) let
-   the deck panes overshoot instead of authoring new end states —
-   every variant still resolves through this exact rule, so nothing
-   can stay transformed or blurred after its entrance.
-   `none` rather than `blur(0)`: a filter value of any kind keeps the
-   element promoted to its own filtered layer for the life of the page,
-   so the ~60 revealed blocks each paid for a texture they no longer
-   needed. A filter list interpolates against `none` as the identity, so
-   the blur still dissolves smoothly — it just ends by leaving nothing
-   behind, which is also the state every inner keyframe already targets. */
+/* .is-visible is a descendant-cascade trigger only — never a visual
+   state for the wrapper itself (motion owns that). Kept as an empty
+   hook so the contract stays greppable; every visual rule keys off
+   `.reveal-scroll.is-visible <descendant>` further below. */
 .reveal-scroll.is-visible {
-  opacity: 1;
-  transform: translate3d(var(--rx-end), var(--ry-end), 0);
-  filter: none;
-  will-change: auto;
+  --seen: 1;
 }
 
-/* layered entrance depths — the parallax illusion, never excessive.
-   Vertical travel stays secondary: the site reads horizontal + depth. */
-.reveal-shift-eyebrow { --rx: -34px; --ry: 7px; --blur-in: 10px; }
-.reveal-shift-heading { --rx: -62px; --ry: 12px; --blur-in: 16px; }
-.reveal-shift-content { --rx: -88px; --ry: 18px; --blur-in: 20px; }
-.reveal-shift-deep { --rx: -108px; --ry: 22px; --blur-in: 22px; }
-.reveal-shift-visual { --rx: -118px; --ry: 22px; --blur-in: 22px; }
-
-/* slow tempo — the final scene: longer settle, softer ride, same
-   composition. Blur now resolves through the shared is-visible rule
-   (no more hard-coded filter: none losing to a higher-specificity
-   override — reduced motion always lands fully crisp). */
-.reveal-tempo-slow { --dur: 1.25s; --blur-in: 14px; }
+/* Entrance depths (travel px + blur px per layer) live in Reveal.jsx's
+   SHIFTS map — the single source of truth — so CSS can never drift
+   out of sync with the motion values. There are intentionally no
+   .reveal-shift-* rules here. */
 
 /* ── scene continuity (pairs with SceneContinuity.jsx) ──
    The page reads as one canvas: each section hairline draws itself
@@ -1688,7 +1668,7 @@ body[data-state="ready"] .reveal {
   animation-delay: calc(var(--d, 0s) + 0.12s + (min(var(--i, 0), 24) * 0.03s));
 }
 @keyframes vibe-line-in {
-  from { opacity: 0; transform: translateX(-10px); filter: blur(4px); }
+  from { opacity: 0; transform: translateY(14px); filter: blur(6px); }
   to { opacity: 1; transform: none; filter: none; }
 }
 
@@ -1731,19 +1711,12 @@ body[data-state="ready"] .reveal {
   100% { opacity: 1; scale: 1; filter: brightness(1); }
 }
 
-/* OUTPUT — downstream of Compile: rides the same left → right
-   signature, travelling deeper than the source pane with the longest
-   blur dissolve — it arrives last, the most "processed" pane. No
-   hard-coded filter on the base rule: blur scales through --blur-in
-   and resolves through the shared .is-visible rule, so this pane
-   always ends opacity 1 / transform none / filter none and inner
-   content swaps (idle ↔ compiled) never replay the entrance. */
-.vibe-deck__grid > .reveal-scroll:last-child {
-  --rx: -72px;
-  --ry: 12px;
-  --dur: 1.05s;
-  --blur-in: 22px;
-}
+/* OUTPUT — downstream of Compile: its Reveal wrapper uses shift="deep"
+   (see VibeCompiler.jsx → Reveal.jsx SHIFTS), so it rises further with
+   more blur than the source pane and arrives last, the most "processed"
+   pane. Inner content swaps (idle ↔ compiled) key off data-phase and
+   never replay the entrance. No per-pane motion tokens here — motion
+   owns the wrapper. */
 
 /* ── output: idle ghost → editorial interpretation ── */
 .vibe-idle {
@@ -1830,26 +1803,21 @@ body[data-state="ready"] .reveal {
 /* ── compiled output entrance ────────────────────────────────
    The compiled view remounts when compilation finishes — every
    compile starts a clean, single animation run (the previous run's
-   DOM is gone; nothing can stack). Blocks resolve top → down on the
-   existing --i index, and each one arrives the way everything else on
-   this site arrives: travelling LEFT → RIGHT out of a soft focus.
-   The old rule lifted blocks out of the page; on a column of text
-   that vertical move fought the horizontal language of the interests
-   nested inside it, so it is gone. `backwards` fill + from-only
+   DOM is gone; nothing can stack). Blocks rise BOTTOM → TOP out of
+   a visible motion blur on a 100ms grid, landing opacity 1 /
+   transform none / filter none. `backwards` fill + from-only
    keyframes: the implicit end state is each block's own base style,
-   so every block lands at opacity 1 / transform none / filter none —
-   the blur and the 0.985 scale are strictly temporary, and the text
-   ends completely crisp. */
+   so the text ends completely crisp. */
 .vibe-stage[data-phase="compiled"] .vibe-c__block {
-  animation: vibe-output-in 0.55s var(--ease-glide) backwards;
-  animation-delay: calc(var(--i, 0) * 0.075s);
+  animation: vibe-output-in 0.6s var(--ease-glide) backwards;
+  animation-delay: calc(var(--i, 0) * 0.1s);
 }
 
 @keyframes vibe-output-in {
   from {
     opacity: 0;
-    transform: translate3d(-14px, 0, 0) scale(0.985);
-    filter: blur(5px);
+    transform: translate3d(0, 28px, 0);
+    filter: blur(10px);
   }
 }
 
@@ -1859,15 +1827,15 @@ body[data-state="ready"] .reveal {
    is keyed to the block they live in (i = 2), so the two waves read as
    one motion instead of two competing ones. */
 .vibe-stage[data-phase="compiled"] .vibe-c__interest {
-  animation: vibe-interest-in 0.32s var(--ease-glide) backwards;
-  animation-delay: calc(0.36s + (var(--j, 0) * 0.04s));
+  animation: vibe-interest-in 0.45s var(--ease-glide) backwards;
+  animation-delay: calc(0.3s + (var(--j, 0) * 0.09s));
 }
 
 @keyframes vibe-interest-in {
   from {
     opacity: 0;
-    transform: translateX(-12px);
-    filter: blur(4px);
+    transform: translateY(16px);
+    filter: blur(8px);
   }
 }
 
@@ -2265,19 +2233,19 @@ body[data-state="ready"] .reveal {
 
 /* the continuous stream — seven rows, ONE composition.
    Rows hold invisible until the wrapping Reveal fires (no flash of
-   unstyled content), then stream in from the left on a 50ms grid:
-   travel → brighten → settle, like a film title sequence.
+   unstyled content), then pop UP from below with visible motion blur
+   on a 90ms grid: rise → declur → settle, like a film title sequence.
    Hover / focus / touch responses below are untouched. */
-.thing { --rx: -55px; }
+.thing { --ry: 36px; }
 .reveal-scroll:not(.is-visible) .thing { opacity: 0; }
 .reveal-scroll.is-visible .thing {
-  animation: thing-in 0.55s var(--ease-cinema) both;
+  animation: thing-in 0.7s var(--ease-glide) both;
   /* --d is this list's Reveal delay, so the rows stream out of a list
-     that has already begun to land (7 rows end right as it settles) */
-  animation-delay: calc(var(--d, 0s) + 0.1s + (var(--i, 0) * 0.05s));
+     that has already begun to land */
+  animation-delay: calc(var(--d, 0s) + 0.1s + (var(--i, 0) * 0.09s));
 }
 @keyframes thing-in {
-  from { opacity: 0; transform: translateX(var(--rx)) translateY(12px); filter: blur(8px) brightness(0.65); }
+  from { opacity: 0; transform: translateY(var(--ry)); filter: blur(12px); }
   to { opacity: 1; transform: none; filter: none; }
 }
 
@@ -2579,15 +2547,15 @@ body[data-state="ready"] .reveal {
    until their Reveal fires. */
 .reveal-scroll:not(.is-visible) .cur-state { opacity: 0; }
 .reveal-scroll.is-visible .cur-state {
-  --rx: calc(-46px + (var(--i, 0) * 5px));
-  animation: cur-state-in 0.5s var(--ease-cinema) both;
+  --ry: calc(40px - (var(--i, 0) * 3px));
+  animation: cur-state-in 0.65s var(--ease-glide) both;
   /* --d is this group's Reveal delay: the rows wait for their container
      to land first, so the cascade is actually seen rather than spent
      behind a still-invisible parent */
-  animation-delay: calc(var(--d, 0s) + 0.16s + (var(--i, 0) * 0.055s));
+  animation-delay: calc(var(--d, 0s) + 0.12s + (var(--i, 0) * 0.09s));
 }
 @keyframes cur-state-in {
-  from { opacity: 0; transform: translateX(var(--rx)) translateY(8px); filter: blur(6px); }
+  from { opacity: 0; transform: translateY(var(--ry)); filter: blur(10px); }
   to { opacity: 1; transform: none; filter: none; }
 }
 .cur-state {
@@ -3063,8 +3031,11 @@ body[data-state="ready"] .reveal {
   opacity: 0.75;
 }
 
-/* anchor return glides — motion-capable users only, so this rule can
-   never override the reduced-motion `auto` below regardless of order */
+/* anchor returns glide for motion-capable users — restates the base
+   `html { scroll-behavior: smooth }` inside no-preference so the
+   intent is explicit. Reduced-motion users match only the `auto`
+   rule above (the two queries are mutually exclusive), so smooth
+   scrolling never overrides it regardless of source order. */
 @media (prefers-reduced-motion: no-preference) {
   html { scroll-behavior: smooth; }
 }
@@ -3089,51 +3060,19 @@ body[data-state="ready"] .reveal {
    shorter travel, lighter blur, quicker settle. Placed last so these
    equal-specificity overrides always win. */
 @media (max-width: 900px) {
-  /* the base override must come FIRST: it and the .reveal-shift-* rules
-     below share specificity, so declaring it last (as it was) quietly
-     flattened every depth layer onto one radius — the per-depth blur
-     ramp only exists if the shift rules get the last word */
-  .reveal-scroll { --blur-in: 12px; }
-  .reveal-shift-eyebrow { --rx: -26px; --ry: 5px; --blur-in: 7px; }
-  .reveal-shift-heading { --rx: -42px; --ry: 8px; --blur-in: 11px; }
-  .reveal-shift-content { --rx: -56px; --ry: 10px; --blur-in: 13px; }
-  .reveal-shift-deep { --rx: -66px; --ry: 12px; --blur-in: 14px; }
-  .reveal-shift-visual { --rx: -74px; --ry: 13px; --blur-in: 15px; }
-  .thing { --rx: -48px; }
-  .reveal-scroll.is-visible .cur-state { --rx: calc(-40px + (var(--i, 0) * 4px)); }
-  /* the deck's output pane carries its own higher-specificity motion
-     tokens, authored for a wide canvas — a -72px slide and a 22px
-     dissolve are a fifth of a phone screen and a wall of mush. It is the
-     one revealed block the shift rules cannot reach, so it is compressed
-     explicitly rather than left at desktop intensity. */
-  .vibe-deck__grid > .reveal-scroll:last-child {
-    --rx: -34px;
-    --ry: 8px;
-    --dur: 0.8s;
-    --blur-in: 11px;
-  }
+  /* Wrapper entrances keep full desktop travel + blur (motion owns
+     fixed values; the rise must stay clearly visible on tablets).
+     Only the descendant CSS cascades compress here. */
+  .thing { --ry: 28px; }
+  .reveal-scroll.is-visible .cur-state { --ry: calc(32px - (var(--i, 0) * 2px)); }
 }
 
 @media (max-width: 640px) {
-  /* one shared entrance curve — long glides read as lag on phones.
-     Declared first so the shift rules below still resolve the depth
-     ramp, exactly as at 900px. */
-  .reveal-scroll { --dur: 0.7s; --blur-in: 8px; }
-  .reveal-shift-eyebrow { --rx: -16px; --ry: 4px; --blur-in: 5px; }
-  .reveal-shift-heading { --rx: -26px; --ry: 5px; --blur-in: 7px; }
-  .reveal-shift-content { --rx: -34px; --ry: 6px; --blur-in: 8px; }
-  .reveal-shift-deep { --rx: -40px; --ry: 7px; --blur-in: 9px; }
-  .reveal-shift-visual { --rx: -44px; --ry: 8px; --blur-in: 10px; }
-  .thing { --rx: -30px; }
-  .reveal-scroll.is-visible .cur-state { --rx: calc(-28px + (var(--i, 0) * 3px)); }
-  /* output pane: compressed with everything else (see the 900px note) */
-  .vibe-deck__grid > .reveal-scroll:last-child {
-    --rx: -22px;
-    --ry: 6px;
-    --dur: 0.7s;
-    --blur-in: 8px;
-  }
-  .reveal-tempo-slow { --dur: 0.9s; }
+  /* Wrapper entrances keep full travel + blur on phones too (motion
+     owns fixed values — the pop-up must stay clearly visible).
+     Only the descendant CSS cascades compress here. */
+  .thing { --ry: 22px; }
+  .reveal-scroll.is-visible .cur-state { --ry: calc(24px - (var(--i, 0) * 2px)); }
   /* word cascades compress with everything else at this width */
   .reveal-scroll.is-visible .split__word {
     animation-duration: 0.5s;
@@ -3157,23 +3096,21 @@ body[data-state="ready"] .reveal {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   19. SCROLL-LINKED MOTION — cascades, defocus, handoff, pointer light
+   19. SCROLL-LINKED MOTION — cascades, handoff, pointer light
    ───────────────────────────────────────────────────────────────
-   Every layer here rides machinery that already exists:
+   The wrapper entrances themselves live in Reveal.jsx (motion/react).
+   What remains here keys off machinery that already exists:
 
    · word cascades key off .reveal-scroll.is-visible (set by the one
      reveal observer) — no extra observers, no extra JS;
-   · velocity defocus and the hero handoff key off the custom
-     properties written by the ONE scroll listener in motion.js
-     initScrollMotion() — no per-component scroll listeners anywhere;
+   · the hero handoff keys off the custom properties written by the
+     ONE scroll listener in motion.js initScrollMotion() — no
+     per-component scroll listeners anywhere (the old velocity-defocus
+     consumer rule was removed with the motion cutover);
    · the pointer light (PointerGlow.jsx / HeroSkills.jsx) is a single
      listener per opted-in surface, writing two numbers.
 
-   Nothing here starts a loop, adds a listener, or touches layout:
-   only transform / opacity / filter / translate, all of which settle
-   back to a completely crisp resting state. Values stay deliberately
-   low so text is readable even mid-scroll, and at rest the gate
-   attribute is removed, which drops every filter on the page.
+   Nothing here starts a loop, adds a listener, or touches layout.
    ═══════════════════════════════════════════════════════════════ */
 
 /* ── word cascade ──
@@ -3189,40 +3126,25 @@ body[data-state="ready"] .reveal {
      than the blur it would speed up */
 }
 .reveal-scroll.is-visible .split__word {
-  animation: split-word-in 0.62s var(--ease-glide) both;
-  /* 18ms grid: even the longest lead sentence (44 words) finishes its
-     cascade in under a second, so the tail never lags the paragraph */
-  animation-delay: calc(var(--d, 0s) + 0.08s + (var(--wi, 0) * 0.018s));
+  animation: split-word-in 0.6s var(--ease-glide) both;
+  /* 22ms grid: even the longest lead sentence (44 words) finishes its
+     cascade in just over a second, so the tail never lags the paragraph */
+  animation-delay: calc(var(--d, 0s) + 0.08s + (var(--wi, 0) * 0.022s));
 }
 @keyframes split-word-in {
-  from { opacity: 0; transform: translate3d(-9px, 6px, 0); filter: blur(4px); }
+  from { opacity: 0; transform: translate3d(0, 14px, 0); filter: blur(6px); }
 }
 
-/* ── velocity defocus ──
-   Applied to visual content only. Excluded on purpose:
-     · the fixed background layers and cursor aura (never filtered);
-     · the compile control column (.vibe-deck__action) — the deck's
-       panes and status bar soften, the button the visitor is about to
-       press does not;
-     · the hero's identity block (see the handoff below);
-     · every gradient-clipped section heading, which is never wrapped
-       by a gated layer at all.
-   No CSS transition: motion.js already interpolates per frame, so the
-   recovery is exactly as short as the loop says it is, and there is no
-   second easing curve to fight. */
-html[data-scroll-motion="on"]
-  :is(
-    .about__inner,
-    .things__inner,
-    .currently__inner,
-    .final__inner,
-    .vibe__head,
-    .vibe-deck__bar,
-    .vibe-deck__pane > *
-  ) {
-  filter: blur(var(--sblur));
-  translate: 0 var(--sdepth);
-}
+/* ── velocity defocus — DISABLED ──
+   Removed with the motion/react cutover: the scroll-velocity blur used
+   to soften these same section inners / deck panes WHILE scrolling,
+   which stacked a second blur on top of the entrance blur and smeared
+   the crisp settle the reveal is supposed to land. Entrances are now
+   owned entirely by motion (one-shot, settles crisp, stays static).
+   motion.js still publishes --sblur / --sdepth harmlessly and the hero
+   handoff + dial below keep working — only this consuming rule is gone,
+   so nothing here can fight the reveal. Do NOT re-add a scroll-linked
+   blur on reveal content. */
 
 /* ── hero handoff ──
    The first viewport gives way as one piece. --hero-out ramps 0 → 1

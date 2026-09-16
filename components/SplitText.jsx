@@ -1,7 +1,7 @@
 /* SplitText — word-cascade for short, plain-colour copy (server, zero JS).
    Each word is an inline-block span carrying its own position index; the
    shared .reveal-scroll.is-visible state in globals.css cascades them
-   LEFT → RIGHT, a beat behind the block they sit in. No hooks, no
+   BOTTOM → TOP, a beat behind the block they sit in. No hooks, no
    measuring, no per-word observers, no animation library — the words
    animate once and then rest at opacity 1 / no transform / no filter, so
    text is always fully crisp after entrance.
