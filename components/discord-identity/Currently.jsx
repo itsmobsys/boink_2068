@@ -4,31 +4,46 @@ import { useState } from "react";
 import { Reveal } from "./Reveal";
 
 export function Currently({ currently }) {
+  // Reveal indices are assigned in actual render order (rather than
+  // hardcoded), so optional blocks (heading/intro/meta) never collide
+  // with — or leave a gap before — the sections that follow them.
+  let i = 0;
+  const eyebrowIndex = i++;
+  const headingIndex = currently.heading ? i++ : null;
+  const introIndex = currently.intro ? i++ : null;
+  const metaIndex = currently.meta ? i++ : null;
+  const featuredIndex = i++;
+  const supportingStart = i;
+  i += currently.supporting.length;
+  const signalIndex = i++;
+  const snapshotIndex = i++;
+  const cyclerIndex = i;
+
   return (
     <section className="di-section di-currently" aria-labelledby="di-currently-heading">
       <div className="di-container">
-        <Reveal>
+        <Reveal index={eyebrowIndex}>
           <h2 id="di-currently-heading" className="di-eyebrow di-mono">
             {currently.eyebrow}
           </h2>
         </Reveal>
         {currently.heading && (
-          <Reveal index={1}>
+          <Reveal index={headingIndex}>
             <p className="di-currently__heading">{currently.heading}</p>
           </Reveal>
         )}
         {currently.intro && (
-          <Reveal index={2}>
+          <Reveal index={introIndex}>
             <p className="di-currently__intro">{currently.intro}</p>
           </Reveal>
         )}
         {currently.meta && (
-          <Reveal index={3}>
+          <Reveal index={metaIndex}>
             <p className="di-currently__meta di-mono">{currently.meta}</p>
           </Reveal>
         )}
 
-        <Reveal index={1} className="di-currently__featured">
+        <Reveal index={featuredIndex} className="di-currently__featured">
           <span className="di-currently__featured-label di-mono">
             {currently.featured.label}
           </span>
@@ -39,8 +54,8 @@ export function Currently({ currently }) {
         </Reveal>
 
         <ul className="di-currently__supporting">
-          {currently.supporting.map((s, i) => (
-            <Reveal as="li" key={s.label} index={i + 2} size="sm">
+          {currently.supporting.map((s, idx) => (
+            <Reveal as="li" key={s.label} index={supportingStart + idx} size="sm">
               <div className="di-currently__row">
                 <span className="di-mono di-currently__row-label">{s.label}</span>
                 <span className="di-currently__row-value">{s.value}</span>
@@ -50,16 +65,13 @@ export function Currently({ currently }) {
         </ul>
 
         <div className="di-currently__footer">
-          <Reveal
-            index={currently.supporting.length + 2}
-            className="di-currently__signal"
-          >
+          <Reveal index={signalIndex} className="di-currently__signal">
             <div className="di-signal-rail" aria-hidden="true">
-              {currently.signal.map((_, i) => (
+              {currently.signal.map((_, idx) => (
                 <span
-                  key={i}
+                  key={idx}
                   className="di-signal-rail__bar"
-                  style={{ "--i": i }}
+                  style={{ "--i": idx }}
                 />
               ))}
             </div>
@@ -70,10 +82,7 @@ export function Currently({ currently }) {
             </ul>
           </Reveal>
 
-          <Reveal
-            index={currently.supporting.length + 3}
-            className="di-currently__snapshot di-mono"
-          >
+          <Reveal index={snapshotIndex} className="di-currently__snapshot di-mono">
             {currently.snapshot}
           </Reveal>
         </div>
@@ -82,7 +91,7 @@ export function Currently({ currently }) {
             Same behavior (cycle curated observations, no timers), restyled
             into this design's voice — not a redesign of the feature. */}
         {currently.snapshots && currently.snapshots.length > 1 && (
-          <Reveal index={currently.supporting.length + 4}>
+          <Reveal index={cyclerIndex}>
             <SnapshotCycler
               snapshots={currently.snapshots}
               buttonLabel={currently.snapshotButton}
