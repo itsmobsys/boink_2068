@@ -1603,7 +1603,7 @@
 }
 [data-scope="discord-identity"] .di-hero__status-pill {
   position: absolute;
-  bottom: -14px;
+  bottom: -26px;
   left: 50%;
   transform: translateX(-50%);
   display: inline-flex;
