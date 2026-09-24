@@ -33,8 +33,11 @@ import { useEffect, useRef } from "react";
 
 const BAND_COUNT = 4;
 const BAND_SPEED = [0.0018, 0.0038, 0.0075, 0.013]; // px/frame-equivalent, very slow
-const BAND_OPACITY = [0.28, 0.4, 0.55, 0.7];
-const BAND_RADIUS = [0.55, 0.85, 1.15, 1.55];
+// Visibility floors (raised from 0.28/0.4/0.55/0.7 + sub-1px radii:
+// pixel census found the field but naked eyes read flat black on
+// #08090c — these keep it quiet yet perceptible on real monitors).
+const BAND_OPACITY = [0.55, 0.7, 0.85, 1.0];
+const BAND_RADIUS = [1.0, 1.4, 1.8, 2.2];
 const BAND_PARALLAX = [0.006, 0.014, 0.026, 0.044]; // fraction of pointer offset, far → near
 
 // Brand hues only — same two colors used for the nebula blobs, so
@@ -51,7 +54,7 @@ function buildStars(width, height, count) {
       x: Math.random() * width,
       y: Math.random() * height,
       radius: BAND_RADIUS[band],
-      baseOpacity: BAND_OPACITY[band] * (0.6 + Math.random() * 0.4),
+      baseOpacity: BAND_OPACITY[band] * (0.8 + Math.random() * 0.2),
       band,
       twinkle: Math.random() < 0.18,
       twinklePhase: Math.random() * Math.PI * 2,
@@ -68,7 +71,7 @@ function buildNebulae(width, height) {
       y: height * 0.3,
       r: Math.max(width, height) * 0.55,
       rgb: ACCENT_RGB,
-      opacity: 0.05,
+      opacity: 0.09,
       dx: 0.0015,
       dy: 0.0009,
       phase: 0,
@@ -78,7 +81,7 @@ function buildNebulae(width, height) {
       y: height * 0.68,
       r: Math.max(width, height) * 0.5,
       rgb: AI_RGB,
-      opacity: 0.045,
+      opacity: 0.07,
       dx: -0.0011,
       dy: -0.0007,
       phase: Math.PI,
@@ -197,7 +200,7 @@ export function Starfield() {
       for (const s of stars) {
         let opacity = s.baseOpacity;
         if (s.twinkle && !reduced) {
-          opacity *= 0.55 + 0.45 * Math.sin(t * 0.0006 + s.twinklePhase);
+          opacity *= 0.8 + 0.2 * Math.sin(t * 0.0006 + s.twinklePhase);
         }
         const px = canHover ? pointerX * BAND_PARALLAX[s.band] : 0;
         const py = canHover ? pointerY * BAND_PARALLAX[s.band] : 0;

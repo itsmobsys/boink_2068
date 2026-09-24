@@ -1,27 +1,33 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Reveal } from "./Reveal";
 
 /**
  * Vibe — "one file, two readings."
  *
- * The old personality-compiler deck, rebuilt on the current
- * contracts: a chassis with a filename/status bar and a progress
- * hairline, then Source → Compile → Output. SOURCE tokenizes the
- * owner's real vibe.data into multi-line JSON (line-number gutter,
- * depth indentation, typed values) — the fallback only covers a
- * missing adapter, never production. COMPILE is the one deliberate
- * press-to-run interaction on the page (idle → compiling → done,
- * re-runnable). OUTPUT re-renders that same underlying data as a
+ * A chassis with a filename/status bar and a progress hairline, then
+ * Source → Compile → Output. SOURCE tokenizes the owner's real
+ * vibe.data into multi-line JSON (line-number gutter, depth
+ * indentation, typed values). COMPILE is the one deliberate
+ * press-to-run interaction on the page (idle → compiling → done
+ * → decompiling → idle, fully reversible). OUTPUT re-renders that same underlying data as a
  * human-readable read-out — same facts, different form — with each
- * line entering top-to-bottom (never character-by-character).
+ * line entering top-to-bottom (never character-by-character)
+ * and exiting bottom-to-top on decompile.
  * Machine state keys off `data-phase`; CSS does the cinema.
+ * Source stays on screen beside the output — the file is the point.
  */
 
-const STATUS = { idle: "Ready", compiling: "Compiling", done: "Compiled" };
+const STATUS = {
+  idle: "Ready",
+  compiling: "Compiling",
+  done: "Compiled",
+  decompiling: "Decompiling",
+};
 const COMPILE_MS = 950; // matches the output lines' entrance budget
+const DECOMPILE_MS = 650; // reverse-stagger exit budget (bottom-to-top)
 
 // Adapter-missing fallback only: raw entries in the adapter's shape,
 // covering every value type the tokenizer colors.
@@ -80,10 +86,35 @@ function tokenize(entries) {
   return lines;
 }
 
+function OutputLine({ text }) {
+  // "key: rest" → key in mint, rest in body text. Same facts,
+  // better reading — the payoff for pressing run.
+  const cut = text.indexOf(":");
+  if (cut > 0) {
+    return (
+      <>
+        <strong>{text.slice(0, cut)}</strong>
+        {text.slice(cut)}
+      </>
+    );
+  }
+  return <>{text}</>;
+}
+
 export function Vibe({ vibe }) {
   const [phase, setPhase] = useState("idle");
   const timer = useRef(null);
   const reduceMotion = useRef(false);
+  const prefersReducedRaw = useReducedMotion();
+  // Mount gate (same as SnapshotCycler): useReducedMotion() is null on
+  // SSR + first client render — branching motion `initial` on it
+  // mismatches hydration. Output lines only mount post-interaction, but
+  // keep the value deterministic from the first render regardless.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  const prefersReduced = mounted ? prefersReducedRaw : false;
 
   useEffect(() => {
     reduceMotion.current =
@@ -96,10 +127,23 @@ export function Vibe({ vibe }) {
   }, []);
 
   function handleCompile() {
-    if (phase === "compiling") return;
-    // Re-run after a finished compile: reset first so the output
-    // exit plays, then run the choreography again.
-    if (phase === "done") setPhase("idle");
+    if (phase === "compiling" || phase === "decompiling") return;
+    // Done → decompile: flip straight to "decompiling", which
+    // unmounts the lines so AnimatePresence plays the reverse-stagger
+    // exit DURING the phase (hairline drains simultaneously), then
+    // drop to idle which restores the source pane + idle ghost.
+    if (phase === "done") {
+      setPhase("decompiling");
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = window.setTimeout(
+        () => {
+          setPhase("idle");
+          timer.current = null;
+        },
+        reduceMotion.current ? 60 : DECOMPILE_MS
+      );
+      return;
+    }
     setPhase("compiling");
     if (timer.current) clearTimeout(timer.current);
     timer.current = window.setTimeout(
@@ -112,6 +156,10 @@ export function Vibe({ vibe }) {
   }
 
   const filename = vibe.filename ?? "profile.json";
+  const eyebrow =
+    vibe.eyebrow && vibe.eyebrow.includes("/")
+      ? vibe.eyebrow
+      : `02 / ${vibe.eyebrow ?? "The Vibe"}`;
   const entries =
     vibe.sourceLines && vibe.sourceLines.length > 0
       ? vibe.sourceLines
@@ -120,15 +168,24 @@ export function Vibe({ vibe }) {
   const outputLines = vibe.outputLines ?? [];
   const isCompiling = phase === "compiling";
   const isDone = phase === "done";
+  const isDecompiling = phase === "decompiling";
+  const isBusy = isCompiling || isDecompiling;
+  const showIdle = !isDone && !isDecompiling;
 
   return (
-    <section className="di-section di-vibe" aria-label="Vibe">
-      <div className="di-container">
+    <section
+      id="di-vibe"
+      className="di-section di-vibe"
+      aria-labelledby="di-vibe-heading"
+    >
+      <div className="di-container di-container--wide">
         <Reveal>
-          <p className="di-eyebrow di-mono">vibe</p>
+          <p className="di-eyebrow di-mono">{eyebrow}</p>
         </Reveal>
         <Reveal index={1}>
-          <h2 className="di-vibe__heading">One file, two readings.</h2>
+          <h2 id="di-vibe-heading" className="di-vibe__heading">
+            One file, two readings.
+          </h2>
         </Reveal>
         {vibe.description && (
           <Reveal index={2}>
@@ -150,13 +207,14 @@ export function Vibe({ vibe }) {
               <div className="di-vibe__deck-progress" aria-hidden="true" />
 
               <div className="di-vibe__deck-grid">
-                {/* SOURCE — collapses away the moment the machine runs,
-                    so compiled output never sits on top of it */}
+                {/* SOURCE — stays on screen beside the output; dims
+                    while the machine runs so the reading lands clean */}
                 <div className="di-vibe__pane di-vibe__pane--source">
                   <div className="di-vibe__pane-clip">
                     <p className="di-vibe__pane-tag di-mono">Source</p>
                     <div
                       className="di-vibe__src di-mono"
+                      role="region"
                       aria-label="Source configuration file"
                     >
                     {sourceLines.map((line, i) => (
@@ -197,51 +255,87 @@ export function Vibe({ vibe }) {
                     type="button"
                     className="di-vibe__compile"
                     onClick={handleCompile}
-                    disabled={isCompiling}
-                    aria-live="polite"
+                    disabled={isBusy}
+                    aria-busy={isBusy}
+                    aria-controls="di-vibe-output"
                   >
                     <span className="di-vibe__compile-label">
-                      {isCompiling ? "reading file…" : isDone ? "run again" : "run"}
+                      {isCompiling
+                        ? "reading file…"
+                        : isDecompiling
+                          ? "reverting…"
+                          : isDone
+                            ? "decompile"
+                            : "run"}
                     </span>
                     <span className="di-vibe__compile-arrow" aria-hidden="true">
-                      →
+                      {isDone || isDecompiling ? "←" : "→"}
                     </span>
-                    {!isCompiling && !isDone && (
-                      <kbd className="di-vibe__compile-key" aria-hidden="true">
-                        ⏎
-                      </kbd>
-                    )}
                   </button>
                   <span className="di-vibe__wire" aria-hidden="true" />
                   <p className="di-vibe__compile-hint di-mono">
-                    {isDone ? "same data, plain reading" : `interpret ${filename}`}
+                    {isDone
+                      ? `restore ${filename}`
+                      : isDecompiling
+                        ? "clearing the plain reading…"
+                        : `interpret ${filename}`}
                   </p>
                 </div>
 
                 {/* OUTPUT */}
                 <div className="di-vibe__pane">
                   <p className="di-vibe__pane-tag di-mono">Output</p>
-                  <div className="di-vibe__output-body">
+                  <div
+                    className="di-vibe__output-body"
+                    id="di-vibe-output"
+                    aria-live="polite"
+                    aria-atomic="true"
+                  >
                     <AnimatePresence>
                       {isDone &&
                         outputLines.map((line, i) => (
                           <motion.p
                             key={line.id}
                             className="di-vibe__output-line"
-                            initial={{ opacity: 0, y: -10, filter: "blur(6px)" }}
-                            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                            exit={{ opacity: 0 }}
+                            initial={
+                              prefersReduced
+                                ? { opacity: 0 }
+                                : { opacity: 0, y: -10, filter: "blur(6px)" }
+                            }
+                            animate={
+                              prefersReduced
+                                ? { opacity: 1 }
+                                : { opacity: 1, y: 0, filter: "blur(0px)" }
+                            }
+                            // Reverse of the entrance: lines sink down and
+                            // blur out bottom-to-top, so decompile reads as
+                            // compile played backwards.
+                            exit={
+                              prefersReduced
+                                ? { opacity: 0, transition: { duration: 0.12 } }
+                                : {
+                                    opacity: 0,
+                                    y: 10,
+                                    filter: "blur(6px)",
+                                    transition: {
+                                      duration: 0.3,
+                                      delay:
+                                        (outputLines.length - 1 - i) * 0.07,
+                                      ease: [0.16, 0.9, 0.3, 1],
+                                    },
+                                  }
+                            }
                             transition={{
-                              duration: 0.5,
-                              delay: i * 0.11,
+                              duration: prefersReduced ? 0 : 0.5,
+                              delay: prefersReduced ? 0 : i * 0.11,
                               ease: [0.16, 0.9, 0.3, 1],
                             }}
                           >
-                            {line.text}
+                            <OutputLine text={line.text} />
                           </motion.p>
                         ))}
                     </AnimatePresence>
-                    {!isDone && (
+                    {showIdle && (
                       <div className="di-vibe__idle">
                         <span
                           className="di-vibe__idle-dot"

@@ -1,7 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Reveal } from "./Reveal";
+
+const TRAIL_HREFS = ["#top", "#di-about", "#di-vibe", "#di-things", "#di-currently", "#top"];
 
 export function Final({ final }) {
   function scrollToTop() {
@@ -14,8 +17,18 @@ export function Final({ final }) {
   }
 
   return (
-    <section className="di-section di-final" aria-label="Closing">
+    <section
+      id="di-final"
+      className="di-section di-final"
+      aria-labelledby="di-final-heading"
+    >
+      <span className="di-final__bgword" aria-hidden="true">
+        boink
+      </span>
       <div className="di-container di-final__inner">
+        <h2 id="di-final-heading" className="sr-only">
+          {final.eyebrow}
+        </h2>
         <Reveal slow>
           <p className="di-eyebrow di-mono">{final.eyebrow}</p>
         </Reveal>
@@ -27,7 +40,9 @@ export function Final({ final }) {
         </Reveal>
 
         <Reveal slow index={2}>
-          <p className="di-final__statement">{final.statement}</p>
+          <p className="di-final__statement">
+            <span className="di-gradient-text">{final.statement}</span>
+          </p>
         </Reveal>
 
         <Reveal slow index={3}>
@@ -52,18 +67,7 @@ export function Final({ final }) {
           )}
         </Reveal>
 
-        <Reveal slow index={5} className="di-final__loop">
-          <div className="di-final__loop-dashes" aria-hidden="true">
-            <span />
-            <span />
-            <span />
-          </div>
-          {final.trail && final.trail.length > 0 && (
-            <p className="di-final__trail di-mono">{final.trail.join(" · ")}</p>
-          )}
-        </Reveal>
-
-        <Reveal slow index={6}>
+        <Reveal slow index={5}>
           <button type="button" className="di-back-to-top di-mono" onClick={scrollToTop}>
             {final.backToTop ?? "back to top"}
           </button>
@@ -72,12 +76,45 @@ export function Final({ final }) {
           )}
         </Reveal>
       </div>
+
+      <footer className="di-footer">
+        <div className="di-container di-footer__inner">
+          {final.trail && final.trail.length > 0 && (
+            <ul className="di-footer__trail di-mono">
+              {final.trail.map((label, i) => (
+                <li key={`${label}-${i}`}>
+                  <a href={TRAIL_HREFS[i % TRAIL_HREFS.length]}>{label}</a>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="di-footer__meta di-mono">
+            <span>© 2026 boink</span>
+            <a
+              href="https://github.com/itsmobsys"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              GitHub
+            </a>
+          </div>
+        </div>
+      </footer>
     </section>
   );
 }
 
 function ThoughtCycler({ thoughts, buttonLabel, counterLabel }) {
   const [index, setIndex] = useState(0);
+  const prefersReduced = useReducedMotion();
+  // Same mount gate as SnapshotCycler: useReducedMotion() is null on
+  // SSR + first client render, so branching motion `initial` on it
+  // mismatches hydration. Pin first renders to animated, honor OS after.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  const reduced = mounted ? prefersReduced : false;
 
   const again = () => {
     setIndex((current) => {
@@ -92,11 +129,26 @@ function ThoughtCycler({ thoughts, buttonLabel, counterLabel }) {
 
   return (
     <div className="di-thought-cycler">
-      <p className="di-final__thought di-mono" aria-live="polite">
-        <span className="di-final__thought-label">
+      <p className="di-final__thought di-mono">
+        <span className="di-final__thought-label" aria-hidden="true">
           {buttonLabel} — {counterLabel} / {String(index + 1).padStart(2, "0")}
         </span>{" "}
-        <span key={index}>“{thoughts[index]}”</span>
+        <span className="sr-only">
+          {buttonLabel}, {counterLabel} {index + 1} of {thoughts.length}:
+        </span>
+        <span aria-live="polite" aria-atomic="true">
+          <AnimatePresence mode="wait">
+            <motion.span
+              key={index}
+              initial={reduced ? { opacity: 0 } : { opacity: 0, y: 6 }}
+              animate={reduced ? { opacity: 1 } : { opacity: 1, y: 0 }}
+              exit={reduced ? { opacity: 0 } : { opacity: 0, y: -6 }}
+              transition={{ duration: reduced ? 0 : 0.25, ease: "easeOut" }}
+            >
+              “{thoughts[index]}”
+            </motion.span>
+          </AnimatePresence>
+        </span>
       </p>
       <button type="button" className="di-thought-cycler__button di-mono" onClick={again}>
         <span aria-hidden="true">↻ </span>

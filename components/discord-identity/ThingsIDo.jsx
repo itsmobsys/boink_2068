@@ -18,16 +18,20 @@ export function ThingsIDo({ things }) {
       ? things.loopSteps
       : ["build", "ship", "observe", "refine"];
   return (
-    <section className="di-section di-things" aria-labelledby="di-things-heading">
+    <section
+      id="di-things"
+      className="di-section di-things"
+      aria-labelledby="di-things-heading"
+    >
       <div className="di-container">
         <Reveal>
-          <h2 id="di-things-heading" className="di-eyebrow di-mono">
-            {things.eyebrow}
-          </h2>
+          <p className="di-eyebrow di-mono">{things.eyebrow}</p>
         </Reveal>
         {things.heading && (
           <Reveal index={1}>
-            <p className="di-things__heading">{things.heading}</p>
+            <h2 id="di-things-heading" className="di-things__heading">
+              {things.heading}
+            </h2>
           </Reveal>
         )}
         {things.intro && (
@@ -40,13 +44,16 @@ export function ThingsIDo({ things }) {
           {things.items.map((thing, i) => (
             <Reveal as="li" key={thing.title} index={i + 1} size="sm">
               <motion.div className="di-things__row" whileHover="hover">
-                <span className="di-things__index di-mono">
+                <span className="di-things__index di-mono" aria-hidden="true">
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 <div className="di-things__row-text">
                   <h3 className="di-things__title">{thing.title}</h3>
                   <p className="di-things__desc">{thing.description}</p>
                 </div>
+                <span className="di-things__arrow" aria-hidden="true">
+                  →
+                </span>
                 <motion.span
                   className="di-things__row-line"
                   variants={{
@@ -81,7 +88,10 @@ export function ThingsIDo({ things }) {
 
 function LoopDiagram({ steps }) {
   return (
-    <div className="di-loop" role="img" aria-label={`Continuous loop: ${steps.join(", ")}`}>
+    <figure className="di-loop">
+      <figcaption className="sr-only">
+        {`Continuous loop: ${steps.join(", ")}`}
+      </figcaption>
       <svg viewBox="0 0 560 140" className="di-loop__svg" aria-hidden="true">
         <path
           d="M60,70 H500"
@@ -98,11 +108,11 @@ function LoopDiagram({ steps }) {
           fill="none"
         />
       </svg>
-      <ul className="di-loop__labels di-mono">
+      <ul className="di-loop__labels di-mono" aria-hidden="true">
         {steps.map((n) => (
           <li key={n}>{n}</li>
         ))}
       </ul>
-    </div>
+    </figure>
   );
 }

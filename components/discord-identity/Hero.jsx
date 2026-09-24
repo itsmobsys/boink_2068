@@ -1,6 +1,7 @@
 "use client";
 
-import { motion } from "motion/react";
+import { useEffect, useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { Reveal } from "./Reveal";
 
 const PRESENCE_LABEL = {
@@ -10,9 +11,39 @@ const PRESENCE_LABEL = {
   offline: "offline",
 };
 
+function Tagline({ text }) {
+  // The one gradient moment: lift the closing clause out of the dim
+  // body copy. Falls back to plain text when the shape is unknown.
+  const phrase = "figuring out how they work";
+  if (typeof text === "string" && text.includes(phrase)) {
+    const [head] = text.split(phrase);
+    return (
+      <>
+        {head}
+        <strong>{phrase}.</strong>
+      </>
+    );
+  }
+  return <>{text}</>;
+}
+
 export function Hero({ profile, skills }) {
+  const reduced = useReducedMotion();
+  // Same mount gate as Reveal: the first client render must match SSR
+  // exactly (React 19 throws #418 on any mismatch, killing all client
+  // effects). Entrances arm on the mount commit instead.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  const canObserve =
+    mounted &&
+    typeof window !== "undefined" &&
+    typeof window.IntersectionObserver === "function";
+
   return (
     <section className="di-section di-hero" aria-label="Introduction">
+      <div className="di-hero__aurora" aria-hidden="true" />
       <div className="di-container di-hero__inner">
         <div className="di-hero__identity">
           <Reveal size="sm">
@@ -20,15 +51,26 @@ export function Hero({ profile, skills }) {
               <div className="di-hero__avatar-halo" aria-hidden="true" />
               <img
                 src={profile.avatarUrl}
-                alt=""
+                alt={`${profile.displayName} (@${profile.username})`}
                 className="di-hero__avatar"
                 width={180}
                 height={180}
+                loading="eager"
+                decoding="async"
               />
+              <span className="di-hero__avatar-ring" aria-hidden="true" />
               <span
                 className={`di-presence-dot di-presence-dot--${profile.presence} di-hero__presence`}
                 aria-hidden="true"
               />
+              <span className="di-hero__status-pill di-mono">
+                <span
+                  className={`di-presence-dot di-presence-dot--${profile.presence}`}
+                  aria-hidden="true"
+                />
+                {PRESENCE_LABEL[profile.presence] ?? profile.presence}
+                {profile.presenceDetail ? ` — ${profile.presenceDetail}` : ""}
+              </span>
             </div>
           </Reveal>
 
@@ -39,22 +81,13 @@ export function Hero({ profile, skills }) {
           <Reveal index={2}>
             <div className="di-hero__meta-row di-mono">
               <span className="di-hero__username">@{profile.username}</span>
-              <span className="di-hero__dot" aria-hidden="true">
-                ·
-              </span>
-              <span className="di-hero__presence-label">
-                <span
-                  className={`di-presence-dot di-presence-dot--${profile.presence}`}
-                  aria-hidden="true"
-                />
-                {PRESENCE_LABEL[profile.presence]}
-                {profile.presenceDetail ? ` — ${profile.presenceDetail}` : ""}
-              </span>
             </div>
           </Reveal>
 
           <Reveal index={3}>
-            <p className="di-hero__tagline">{profile.tagline}</p>
+            <p className="di-hero__tagline">
+              <Tagline text={profile.tagline} />
+            </p>
           </Reveal>
 
           {(profile.location || profile.timezoneLabel || profile.memberSinceLabel) && (
@@ -70,7 +103,7 @@ export function Hero({ profile, skills }) {
           <Reveal index={5}>
             <div className="di-hero__actions">
               <a
-                className="di-github-button di-mono"
+                className="di-github-button di-github-button--primary di-mono"
                 href="https://github.com/itsmobsys"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -89,38 +122,48 @@ export function Hero({ profile, skills }) {
                 </svg>
                 <span>GitHub</span>
               </a>
+              <a className="di-github-button di-mono" href="#di-about">
+                <span aria-hidden="true">↓&nbsp;</span>
+                <span>Enter</span>
+              </a>
+            </div>
+          </Reveal>
+
+          <Reveal index={6}>
+            <div className="di-hero__scroll-cue di-mono" aria-hidden="true">
+              <a href="#di-about" tabIndex={-1}>
+                scroll
+                <span className="di-hero__scroll-line" />
+              </a>
             </div>
           </Reveal>
         </div>
 
-        <Reveal index={6} className="di-hero__skills-wrap">
+        <Reveal index={7} className="di-hero__skills-wrap">
           <ul className="di-hero__skills" role="list">
             {skills.map((skill, i) => (
               <motion.li
                 key={skill.label}
                 className="di-chip"
                 data-group={skill.group}
-                initial={{ opacity: 0, y: 16, filter: "blur(6px)" }}
-                whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                tabIndex={0}
+                initial={
+                  !canObserve || reduced ? false : { opacity: 0, y: 12 }
+                }
+                whileInView={
+                  !canObserve || reduced ? { opacity: 1 } : { opacity: 1, y: 0 }
+                }
                 viewport={{ once: true, margin: "-5% 0px" }}
                 transition={{
-                  duration: 0.5,
-                  delay: 0.5 + i * 0.035,
+                  duration: reduced ? 0 : 0.45,
+                  delay: reduced ? 0 : 0.05 + i * 0.03,
                   ease: [0.16, 0.9, 0.3, 1],
                 }}
-                whileHover={{ y: -3 }}
+                whileHover={reduced ? undefined : { y: -3 }}
               >
                 <span className="di-chip__dot" aria-hidden="true" />
                 <span className="di-chip__label">{skill.label}</span>
               </motion.li>
-            ))}
-          </ul>
-          <ul className="di-hero__skills-legend di-mono" aria-hidden="true">
-            {SKILL_GROUP_ORDER.map((group) => (
-              <li key={group} data-group={group}>
-                <span className="di-chip__dot" />
-                {SKILL_GROUP_LABEL[group]}
-              </li>
             ))}
           </ul>
         </Reveal>
@@ -128,21 +171,3 @@ export function Hero({ profile, skills }) {
     </section>
   );
 }
-
-const SKILL_GROUP_ORDER = [
-  "frontend",
-  "backend",
-  "infra",
-  "ai",
-  "tooling",
-  "platform",
-];
-
-const SKILL_GROUP_LABEL = {
-  frontend: "frontend",
-  backend: "backend",
-  infra: "infrastructure",
-  ai: "ai",
-  tooling: "tooling",
-  platform: "platforms",
-};

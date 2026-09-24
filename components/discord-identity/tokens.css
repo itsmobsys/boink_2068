@@ -5,20 +5,23 @@
    ============================================================ */
 
 [data-scope="discord-identity"] {
-  /* ---- color ---- */
-  --di-bg: #0a0b0d;
-  --di-bg-raised: #121319;
-  --di-bg-panel: #15171c;
+  /* ---- color · cinematic aurora ---- */
+  --di-bg: #08090c;
+  --di-bg-raised: #101218;
+  --di-bg-panel: #14161d;
   --di-border: #23262e;
-  --di-border-strong: #33363f;
+  --di-border-strong: #383c48;
 
-  --di-text: #e8eaed;
-  --di-text-dim: #9a9ea8;
-  --di-text-faint: #63666f;
+  --di-text: #e9ebf0;
+  --di-text-dim: #a7abb6;
+  --di-text-faint: #8e93a0;
 
-  --di-accent: #5865f2;
-  --di-accent-soft: rgba(88, 101, 242, 0.14);
-  --di-accent-line: rgba(88, 101, 242, 0.35);
+  --di-accent: #7c7cff;
+  --di-accent-2: #5eead4;
+  --di-gradient: linear-gradient(135deg, #7c7cff 0%, #5eead4 100%);
+  --di-accent-soft: rgba(124, 124, 255, 0.14);
+  --di-accent-line: rgba(124, 124, 255, 0.38);
+  --di-mint-soft: rgba(94, 234, 212, 0.12);
 
   --di-online: #3ba55d;
   --di-idle: #faa61a;
@@ -57,12 +60,12 @@
     "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas,
     monospace;
 
-  --di-size-display: clamp(2.6rem, 5.4vw, 4.6rem);
+  --di-size-display: clamp(2.8rem, 6vw, 5rem);
   --di-size-h2: clamp(1.7rem, 3vw, 2.4rem);
   --di-size-h3: clamp(1.15rem, 1.6vw, 1.4rem);
   --di-size-body: 1rem;
-  --di-size-small: 0.85rem;
-  --di-size-micro: 0.75rem;
+  --di-size-small: 0.875rem;
+  --di-size-micro: 0.78rem;
 
   /* ---- rhythm ---- */
   --di-gutter: clamp(1.25rem, 5vw, 4rem);
@@ -70,6 +73,9 @@
   --di-radius-sm: 8px;
   --di-radius-md: 14px;
   --di-radius-lg: 22px;
+  --di-nav-h: 60px;
+  --di-container: 1040px;
+  --di-container-wide: 1200px;
 
   /* ---- starfield ---- */
   --di-star-opacity-far: 0.35;
@@ -117,9 +123,50 @@
 }
 
 [data-scope="discord-identity"] .di-container {
-  max-width: 1040px;
+  max-width: var(--di-container);
   margin: 0 auto;
   padding-inline: var(--di-gutter);
+}
+
+[data-scope="discord-identity"] .di-container--wide {
+  max-width: var(--di-container-wide);
+}
+
+/* Gradient text utility — the one memorable type moment */
+[data-scope="discord-identity"] .di-gradient-text {
+  background: var(--di-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Film grain — single fixed overlay, ultra subtle */
+[data-scope="discord-identity"] .di-grain {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+}
+
+/* Skip link */
+[data-scope="discord-identity"] .di-skip {
+  position: fixed;
+  top: -60px;
+  left: 16px;
+  z-index: 100;
+  background: var(--di-bg-raised);
+  color: var(--di-text);
+  border: 1px solid var(--di-accent-line);
+  border-radius: var(--di-radius-sm);
+  padding: 0.6rem 1rem;
+  font-size: var(--di-size-small);
+  text-decoration: none;
+  transition: top 0.2s ease;
+}
+[data-scope="discord-identity"] .di-skip:focus-visible {
+  top: 12px;
 }
 
 [data-scope="discord-identity"] :focus-visible {

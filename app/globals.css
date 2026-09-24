@@ -14,17 +14,18 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html {
-  background: #0a0b0d;
+  background: #08090c;
   scrollbar-width: thin;
   scrollbar-color: #2a2a33 transparent;
   scroll-behavior: smooth;
+  scroll-padding-top: 76px;
 }
 
 body {
   min-height: 100vh;
   min-height: 100svh;
-  background: #0a0b0d;
-  color: #e8eaed;
+  background: #08090c;
+  color: #e9ebf0;
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -34,7 +35,7 @@ body {
 
 ::-webkit-scrollbar { width: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #23232c; border-radius: 8px; border: 2px solid #0a0b0d; }
+::-webkit-scrollbar-thumb { background: #23232c; border-radius: 8px; border: 2px solid #08090c; }
 ::-webkit-scrollbar-thumb:hover { background: #2e2e3a; }
 
 img { display: block; max-width: 100%; }

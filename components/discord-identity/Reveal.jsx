@@ -16,7 +16,7 @@
  * media query itself — it just animates between token-driven values.
  */
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useInView, useReducedMotion } from "motion/react";
 
 export function Reveal({
@@ -35,6 +35,26 @@ export function Reveal({
   });
   const reduced = useReducedMotion();
 
+  // Mount gate: the first client render must be byte-identical to SSR
+  // (window is undefined there), otherwise React 19 throws a hydration
+  // mismatch (#418) that kills every client effect on the page —
+  // including the Starfield canvas. So observation stays off until the
+  // mount commit, then this re-renders with entrances armed.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Progressive enhancement: without IntersectionObserver (old
+  // browsers, embedded WebViews) the entrance can never trigger, so
+  // render the resting state immediately instead of stranding content
+  // at opacity 0. SSR also renders visible (window is undefined),
+  // which keeps no-JS and crawlers on the readable markup.
+  const canObserve =
+    mounted &&
+    typeof window !== "undefined" &&
+    typeof window.IntersectionObserver === "function";
+
   const riseVar = size === "sm" ? "var(--di-rise-sm)" : "var(--di-rise)";
   const blurVar = size === "sm" ? "var(--di-blur-sm)" : "var(--di-blur)";
 
@@ -46,27 +66,26 @@ export function Reveal({
 
   const MotionTag = motion[as];
 
+  const hidden = {
+    opacity: 0,
+    y: riseVar,
+    scale: "var(--di-scale)",
+    filter: `blur(${blurVar})`,
+  };
+  const shown = { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" };
+
   return (
     <MotionTag
       ref={ref}
       className={className}
-      initial={{
-        opacity: 0,
-        y: riseVar,
-        scale: "var(--di-scale)",
-        filter: `blur(${blurVar})`,
-      }}
-      animate={
-        inView
-          ? { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }
-          : undefined
-      }
+      initial={canObserve ? hidden : false}
+      animate={inView || !canObserve ? shown : undefined}
       transition={{
         duration,
         delay,
         ease: [0.16, 0.9, 0.3, 1],
       }}
-      style={{ willChange: "transform, filter, opacity" }}
+      style={{ willChange: inView ? "auto" : "transform, filter, opacity" }}
     >
       {children}
     </MotionTag>
