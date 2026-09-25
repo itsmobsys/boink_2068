@@ -44,6 +44,7 @@ const SHOOT_INTERVAL_MS = 2000; // one bright crossing every two seconds
 const BAND_OPACITY = [0.55, 0.7, 0.85, 1.0];
 const BAND_RADIUS = [1.0, 1.4, 1.8, 2.2];
 const BAND_PARALLAX = [0.006, 0.014, 0.026, 0.044]; // fraction of pointer offset, far → near
+const PARALLAX_GAIN = 1.75; // increase cursor response by 75%
 
 // Brand hues only — same two colors used for the nebula blobs, so
 // tinted stars and nebula read as one palette, not a new one.
@@ -541,8 +542,12 @@ export function Starfield() {
         if (s.twinkle && !reduced) {
           opacity *= 0.72 + 0.28 * Math.sin(t * 0.0006 + s.twinklePhase);
         }
-        const px = canHover ? pointerX * BAND_PARALLAX[s.band] : 0;
-        const py = canHover ? pointerY * BAND_PARALLAX[s.band] : 0;
+        const px = canHover
+          ? pointerX * BAND_PARALLAX[s.band] * PARALLAX_GAIN
+          : 0;
+        const py = canHover
+          ? pointerY * BAND_PARALLAX[s.band] * PARALLAX_GAIN
+          : 0;
         const x = s.x + px;
         const y = s.y + py;
 
