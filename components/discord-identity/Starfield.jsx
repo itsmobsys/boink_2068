@@ -18,8 +18,7 @@
  * of color and scale behind the points.
  * - Cursor parallax: near bands shift more than far bands toward
  *   the pointer, offset is lerped (never snaps) so it reads as
- *   depth, not tracking. Pointer-only — no effect from touch, and
- *   fully skipped under reduced motion.
+ *   depth, not tracking. Pointer-only — no effect from touch.
  * - A tiny black hole with a dark event horizon, rotating accretion
  *   disk, lensing halo, and orbiting particles — always visible but
  *   deliberately small enough to stay atmospheric.
@@ -28,10 +27,10 @@
  * - A bright shooting star crosses the upper field every two seconds,
  *   fading from a sharp glow into a soft tail and back out.
  *
- * Respects prefers-reduced-motion (render once, static, no RAF
- * loop, no parallax, no shooting stars) unless the visitor explicitly
- * enables the motion control in the navigation, and reduces particle
- * count on narrow viewports.
+ * The decorative background is intentionally always active so the
+ * satellite, black hole, stars, and signal effects remain alive in the
+ * page preview. Motion.dev UI animations still follow the global
+ * reducedMotion setting. Particle count is reduced on narrow viewports.
  */
 
 import { useEffect, useRef } from "react";
@@ -124,19 +123,9 @@ export function Starfield() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const motionQuery = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    );
-    const rootMotion = document
-      .querySelector('[data-scope="discord-identity"]')
-      ?.dataset.motion;
-    let motionEnabled =
-      rootMotion === "on"
-        ? true
-        : rootMotion === "off"
-          ? false
-          : !motionQuery.matches;
-    let reduced = !motionEnabled;
+    // The ambient canvas is intentionally always live; Motion.dev still
+    // controls reduced-motion behavior for the rest of the interface.
+    const reduced = false;
     const isMobile = window.innerWidth < 640;
     const canHover =
       typeof window.matchMedia === "function" &&
@@ -158,39 +147,9 @@ export function Starfield() {
     let pointerTargetY = 0;
 
     let shootingStar = null;
-    let nextShootAt = motionEnabled
-      ? performance.now() + SHOOT_INTERVAL_MS
-      : Infinity;
+    let nextShootAt = performance.now() + SHOOT_INTERVAL_MS;
     const blackHole = { x: 0, y: 0, radius: 0, tilt: -0.24 };
     const satellite = { x: 0, y: 0, radius: 0, tilt: -0.12 };
-
-    function setMotionEnabled(next) {
-      const enabled = Boolean(next);
-      if (enabled === motionEnabled) {
-        draw();
-        return;
-      }
-
-      motionEnabled = enabled;
-      reduced = !enabled;
-
-      if (enabled) {
-        shootingStar = null;
-        nextShootAt = performance.now() + SHOOT_INTERVAL_MS;
-        if (!rafId) rafId = requestAnimationFrame(step);
-      } else {
-        shootingStar = null;
-        if (rafId) cancelAnimationFrame(rafId);
-        rafId = 0;
-        draw();
-      }
-    }
-
-    function handleMotionPreference(event) {
-      if (typeof event.detail?.enabled === "boolean") {
-        setMotionEnabled(event.detail.enabled);
-      }
-    }
 
     function resize() {
       const parent = canvas.parentElement;
@@ -659,18 +618,14 @@ export function Starfield() {
 
     resize();
     window.addEventListener("resize", resize);
-    window.addEventListener("boink:ambient-motion", handleMotionPreference);
     if (canHover) {
       window.addEventListener("pointermove", handlePointerMove);
     }
 
-    if (motionEnabled && !rafId) {
-      rafId = requestAnimationFrame(step);
-    }
+    rafId = requestAnimationFrame(step);
 
     return () => {
       window.removeEventListener("resize", resize);
-      window.removeEventListener("boink:ambient-motion", handleMotionPreference);
       if (canHover) {
         window.removeEventListener("pointermove", handlePointerMove);
       }

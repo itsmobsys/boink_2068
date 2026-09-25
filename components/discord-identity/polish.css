@@ -323,11 +323,6 @@
   70% { transform: translate3d(-5px, -28px, 0) scale(0.95); opacity: 0.42; }
 }
 
-@keyframes di-motion-meter {
-  from { transform: scaleY(0.68); opacity: 0.55; }
-  to { transform: scaleY(1.12); opacity: 1; }
-}
-
 /* ---------- navigation ---------- */
 
 [data-scope="discord-identity"] .di-nav {
@@ -430,83 +425,6 @@
   font-size: 0.52rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-}
-
-[data-scope="discord-identity"] .di-nav__motion {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  min-height: 2rem;
-  padding: 0.4rem 0.65rem;
-  border: 1px solid rgba(139, 125, 255, 0.2);
-  border-radius: 9px;
-  background: rgba(139, 125, 255, 0.045);
-  color: var(--di-text-faint);
-  cursor: pointer;
-  font-size: 0.58rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
-}
-
-[data-scope="discord-identity"] .di-nav__motion:hover,
-[data-scope="discord-identity"] .di-nav__motion:focus-visible {
-  color: var(--di-text);
-  border-color: rgba(103, 232, 209, 0.48);
-  background: rgba(103, 232, 209, 0.08);
-  box-shadow: 0 0 18px rgba(103, 232, 209, 0.12);
-  outline: none;
-}
-
-[data-scope="discord-identity"] .di-nav__motion[data-motion-state="on"] {
-  color: var(--di-accent-2);
-  border-color: rgba(103, 232, 209, 0.34);
-}
-
-[data-scope="discord-identity"] .di-nav__motion[data-motion-state="off"] {
-  color: #f2c3a5;
-  border-color: rgba(242, 195, 165, 0.32);
-}
-
-[data-scope="discord-identity"] .di-nav__motion-icon {
-  display: inline-flex;
-  align-items: flex-end;
-  gap: 2px;
-  width: 13px;
-  height: 12px;
-}
-
-[data-scope="discord-identity"] .di-nav__motion-icon i {
-  display: block;
-  width: 3px;
-  border-radius: 2px;
-  background: currentColor;
-  opacity: 0.55;
-}
-
-[data-scope="discord-identity"] .di-nav__motion-icon i:nth-child(1) {
-  height: 5px;
-}
-
-[data-scope="discord-identity"] .di-nav__motion-icon i:nth-child(2) {
-  height: 9px;
-}
-
-[data-scope="discord-identity"] .di-nav__motion-icon i:nth-child(3) {
-  height: 12px;
-}
-
-[data-scope="discord-identity"] .di-nav__motion[data-motion-state="on"] .di-nav__motion-icon i {
-  opacity: 1;
-  animation: di-motion-meter 1.4s ease-in-out infinite alternate;
-}
-
-[data-scope="discord-identity"] .di-nav__motion[data-motion-state="on"] .di-nav__motion-icon i:nth-child(2) {
-  animation-delay: -0.35s;
-}
-
-[data-scope="discord-identity"] .di-nav__motion[data-motion-state="on"] .di-nav__motion-icon i:nth-child(3) {
-  animation-delay: -0.7s;
 }
 
 [data-scope="discord-identity"] .di-nav__toggle {
@@ -1977,15 +1895,6 @@
     display: none;
   }
 
-  [data-scope="discord-identity"] .di-nav__motion {
-    margin-left: 0.5rem;
-    padding-inline: 0.55rem;
-  }
-
-  [data-scope="discord-identity"] .di-nav__motion > span:last-child {
-    display: none;
-  }
-
   [data-scope="discord-identity"] .di-nav__toggle {
     display: inline-flex;
     align-items: center;
@@ -2216,30 +2125,11 @@
   }
 }
 
-/* The ambient layer follows the OS preference by default, but the nav
-   motion switch can explicitly opt back in. This keeps the preference
-   respected without making a live background impossible to preview. */
-[data-scope="discord-identity"][data-motion="off"] .di-ambient,
-[data-scope="discord-identity"][data-motion="off"] .di-ambient * {
-  animation: none !important;
-}
-
 @media (prefers-reduced-motion: reduce) {
-  [data-scope="discord-identity"]:not([data-motion="on"]) .di-ambient__aurora,
-  [data-scope="discord-identity"]:not([data-motion="on"]) .di-ambient__mesh,
-  [data-scope="discord-identity"]:not([data-motion="on"]) .di-ambient__wire,
-  [data-scope="discord-identity"]:not([data-motion="on"]) .di-ambient__node,
-  [data-scope="discord-identity"]:not([data-motion="on"]) .di-ambient__orbit,
-  [data-scope="discord-identity"]:not([data-motion="on"]) .di-ambient__beam,
-  [data-scope="discord-identity"]:not([data-motion="on"]) .di-ambient__mote,
   [data-scope="discord-identity"] .di-hero__avatar-orbit,
   [data-scope="discord-identity"] .di-hero__card-scan,
   [data-scope="discord-identity"] .di-signal-rail__bar {
     animation: none;
-  }
-
-  [data-scope="discord-identity"]:not([data-motion="on"]) .di-ambient__beam {
-    opacity: 0.18;
   }
 
   [data-scope="discord-identity"] .di-things__row:hover,
