@@ -68,7 +68,264 @@
 }
 
 [data-scope="discord-identity"] .di-starfield {
-  opacity: 0.72;
+  opacity: 0.9;
+}
+
+/* ---------- ambient signal ----------
+   A low-contrast, autonomous layer of color and light. It is intentionally
+   kept behind the canvas starfield and page content so it adds atmosphere
+   rather than becoming another focal point. */
+
+[data-scope="discord-identity"] .di-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+  opacity: 1;
+}
+
+[data-scope="discord-identity"] .di-ambient__aurora {
+  position: absolute;
+  z-index: 0;
+  width: max(26rem, 42vw);
+  height: max(26rem, 42vw);
+  border-radius: 50%;
+  filter: blur(72px);
+  opacity: 0.5;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+[data-scope="discord-identity"] .di-ambient__aurora--violet {
+  top: -24%;
+  right: -10%;
+  background: radial-gradient(
+    circle,
+    rgba(139, 125, 255, 0.34) 0%,
+    rgba(101, 91, 220, 0.12) 38%,
+    transparent 72%
+  );
+  animation: di-ambient-violet-drift 17s ease-in-out infinite alternate;
+}
+
+[data-scope="discord-identity"] .di-ambient__aurora--mint {
+  bottom: -28%;
+  left: -13%;
+  background: radial-gradient(
+    circle,
+    rgba(103, 232, 209, 0.2) 0%,
+    rgba(55, 152, 164, 0.08) 40%,
+    transparent 72%
+  );
+  animation: di-ambient-mint-drift 21s ease-in-out infinite alternate;
+}
+
+[data-scope="discord-identity"] .di-ambient__mesh {
+  position: absolute;
+  inset: -12%;
+  z-index: 1;
+  opacity: 0.17;
+  background-image:
+    linear-gradient(rgba(139, 125, 255, 0.16) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(103, 232, 209, 0.13) 1px, transparent 1px);
+  background-size: 112px 112px;
+  mask-image: radial-gradient(ellipse at 50% 34%, black 0%, rgba(0, 0, 0, 0.65) 34%, transparent 78%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 34%, black 0%, rgba(0, 0, 0, 0.65) 34%, transparent 78%);
+  transform: translate3d(0, 0, 0) rotate(0.001deg);
+  animation: di-ambient-mesh-drift 30s linear infinite;
+}
+
+[data-scope="discord-identity"] .di-ambient__wireframe {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  opacity: 0.4;
+  mix-blend-mode: screen;
+}
+
+[data-scope="discord-identity"] .di-ambient__wireframe svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+[data-scope="discord-identity"] .di-ambient__wire {
+  fill: none;
+  stroke: rgba(139, 125, 255, 0.28);
+  stroke-width: 1;
+  stroke-dasharray: 2 17;
+  vector-effect: non-scaling-stroke;
+  animation: di-ambient-wire-drift 17s linear infinite;
+}
+
+[data-scope="discord-identity"] .di-ambient__wire--two {
+  stroke: rgba(103, 232, 209, 0.2);
+  stroke-dasharray: 1 23;
+  animation-duration: 23s;
+  animation-direction: reverse;
+}
+
+[data-scope="discord-identity"] .di-ambient__wire--three {
+  stroke: rgba(184, 169, 255, 0.17);
+  stroke-dasharray: 3 25;
+  animation-duration: 28s;
+}
+
+[data-scope="discord-identity"] .di-ambient__node {
+  fill: var(--di-accent-2);
+  opacity: 0.82;
+  filter: drop-shadow(0 0 5px rgba(103, 232, 209, 0.85));
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: di-ambient-node-pulse 4.8s ease-in-out infinite;
+}
+
+[data-scope="discord-identity"] .di-ambient__node--two {
+  fill: var(--di-accent);
+  animation-delay: -1.7s;
+  animation-duration: 5.7s;
+}
+
+[data-scope="discord-identity"] .di-ambient__node--three {
+  animation-delay: -3.2s;
+  animation-duration: 6.4s;
+}
+
+[data-scope="discord-identity"] .di-ambient__orbit {
+  position: absolute;
+  z-index: 3;
+  width: min(72vw, 980px);
+  aspect-ratio: 1;
+  border: 1px solid rgba(139, 125, 255, 0.12);
+  border-radius: 50%;
+  pointer-events: none;
+  transform-origin: center;
+  will-change: transform;
+}
+
+[data-scope="discord-identity"] .di-ambient__orbit--one {
+  top: 7%;
+  left: 56%;
+  transform: translate(-50%, -50%) rotate(-18deg) scaleY(0.32);
+  animation: di-ambient-orbit-one 26s linear infinite;
+}
+
+[data-scope="discord-identity"] .di-ambient__orbit--two {
+  top: 78%;
+  left: 12%;
+  width: min(48vw, 620px);
+  border-color: rgba(103, 232, 209, 0.1);
+  transform: translate(-50%, -50%) rotate(28deg) scaleY(0.28);
+  animation: di-ambient-orbit-two 32s linear infinite reverse;
+}
+
+[data-scope="discord-identity"] .di-ambient__beam {
+  position: absolute;
+  top: -20%;
+  left: -38%;
+  z-index: 4;
+  width: 28%;
+  height: 140%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(139, 125, 255, 0.03) 35%,
+    rgba(103, 232, 209, 0.11) 50%,
+    rgba(139, 125, 255, 0.03) 65%,
+    transparent 100%
+  );
+  filter: blur(10px);
+  opacity: 0.82;
+  transform: rotate(17deg);
+  mix-blend-mode: screen;
+  animation: di-ambient-beam 13s ease-in-out infinite;
+}
+
+[data-scope="discord-identity"] .di-ambient__motes {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+}
+
+[data-scope="discord-identity"] .di-ambient__mote {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  background: rgba(222, 226, 255, 0.8);
+  box-shadow: 0 0 10px 2px rgba(139, 125, 255, 0.42);
+  opacity: 0.28;
+  will-change: transform, opacity;
+  animation-name: di-ambient-mote-float;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+[data-scope="discord-identity"] .di-ambient__mote:nth-child(3n) {
+  background: rgba(103, 232, 209, 0.9);
+  box-shadow: 0 0 11px 2px rgba(103, 232, 209, 0.38);
+}
+
+[data-scope="discord-identity"] .di-ambient__mote:nth-child(4n) {
+  background: rgba(184, 169, 255, 0.9);
+}
+
+@keyframes di-ambient-violet-drift {
+  0% { transform: translate3d(-7%, -4%, 0) scale(0.94); opacity: 0.4; }
+  50% { opacity: 0.62; }
+  100% { transform: translate3d(12%, 10%, 0) scale(1.1); opacity: 0.46; }
+}
+
+@keyframes di-ambient-mint-drift {
+  0% { transform: translate3d(6%, 7%, 0) scale(1.06); opacity: 0.34; }
+  50% { opacity: 0.54; }
+  100% { transform: translate3d(-12%, -10%, 0) scale(0.92); opacity: 0.4; }
+}
+
+@keyframes di-ambient-mesh-drift {
+  0% { transform: translate3d(0, 0, 0) rotate(0.001deg); }
+  50% { transform: translate3d(-32px, 24px, 0) rotate(0.001deg); }
+  100% { transform: translate3d(32px, -24px, 0) rotate(0.001deg); }
+}
+
+@keyframes di-ambient-wire-drift {
+  to { stroke-dashoffset: -190; }
+}
+
+@keyframes di-ambient-node-pulse {
+  0%, 100% { opacity: 0.28; transform: scale(0.75); }
+  50% { opacity: 0.92; transform: scale(1.35); }
+}
+
+@keyframes di-ambient-orbit-one {
+  from { transform: translate(-50%, -50%) rotate(-18deg) scaleY(0.32); }
+  to { transform: translate(-50%, -50%) rotate(342deg) scaleY(0.32); }
+}
+
+@keyframes di-ambient-orbit-two {
+  from { transform: translate(-50%, -50%) rotate(28deg) scaleY(0.28); }
+  to { transform: translate(-50%, -50%) rotate(-332deg) scaleY(0.28); }
+}
+
+@keyframes di-ambient-beam {
+  0%, 12% { transform: translate3d(-10vw, 0, 0) rotate(17deg); opacity: 0; }
+  28% { opacity: 0.7; }
+  72% { opacity: 0.52; }
+  88%, 100% { transform: translate3d(150vw, 0, 0) rotate(17deg); opacity: 0; }
+}
+
+@keyframes di-ambient-mote-float {
+  0%, 100% { transform: translate3d(0, 8px, 0) scale(0.75); opacity: 0.16; }
+  45% { transform: translate3d(12px, -18px, 0) scale(1.2); opacity: 0.7; }
+  70% { transform: translate3d(-5px, -28px, 0) scale(0.95); opacity: 0.42; }
+}
+
+@keyframes di-motion-meter {
+  from { transform: scaleY(0.68); opacity: 0.55; }
+  to { transform: scaleY(1.12); opacity: 1; }
 }
 
 /* ---------- navigation ---------- */
@@ -173,6 +430,83 @@
   font-size: 0.52rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+[data-scope="discord-identity"] .di-nav__motion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2rem;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid rgba(139, 125, 255, 0.2);
+  border-radius: 9px;
+  background: rgba(139, 125, 255, 0.045);
+  color: var(--di-text-faint);
+  cursor: pointer;
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+[data-scope="discord-identity"] .di-nav__motion:hover,
+[data-scope="discord-identity"] .di-nav__motion:focus-visible {
+  color: var(--di-text);
+  border-color: rgba(103, 232, 209, 0.48);
+  background: rgba(103, 232, 209, 0.08);
+  box-shadow: 0 0 18px rgba(103, 232, 209, 0.12);
+  outline: none;
+}
+
+[data-scope="discord-identity"] .di-nav__motion[data-motion-state="on"] {
+  color: var(--di-accent-2);
+  border-color: rgba(103, 232, 209, 0.34);
+}
+
+[data-scope="discord-identity"] .di-nav__motion[data-motion-state="off"] {
+  color: #f2c3a5;
+  border-color: rgba(242, 195, 165, 0.32);
+}
+
+[data-scope="discord-identity"] .di-nav__motion-icon {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  width: 13px;
+  height: 12px;
+}
+
+[data-scope="discord-identity"] .di-nav__motion-icon i {
+  display: block;
+  width: 3px;
+  border-radius: 2px;
+  background: currentColor;
+  opacity: 0.55;
+}
+
+[data-scope="discord-identity"] .di-nav__motion-icon i:nth-child(1) {
+  height: 5px;
+}
+
+[data-scope="discord-identity"] .di-nav__motion-icon i:nth-child(2) {
+  height: 9px;
+}
+
+[data-scope="discord-identity"] .di-nav__motion-icon i:nth-child(3) {
+  height: 12px;
+}
+
+[data-scope="discord-identity"] .di-nav__motion[data-motion-state="on"] .di-nav__motion-icon i {
+  opacity: 1;
+  animation: di-motion-meter 1.4s ease-in-out infinite alternate;
+}
+
+[data-scope="discord-identity"] .di-nav__motion[data-motion-state="on"] .di-nav__motion-icon i:nth-child(2) {
+  animation-delay: -0.35s;
+}
+
+[data-scope="discord-identity"] .di-nav__motion[data-motion-state="on"] .di-nav__motion-icon i:nth-child(3) {
+  animation-delay: -0.7s;
 }
 
 [data-scope="discord-identity"] .di-nav__toggle {
@@ -1643,6 +1977,15 @@
     display: none;
   }
 
+  [data-scope="discord-identity"] .di-nav__motion {
+    margin-left: 0.5rem;
+    padding-inline: 0.55rem;
+  }
+
+  [data-scope="discord-identity"] .di-nav__motion > span:last-child {
+    display: none;
+  }
+
   [data-scope="discord-identity"] .di-nav__toggle {
     display: inline-flex;
     align-items: center;
@@ -1841,11 +2184,62 @@
   }
 }
 
+@media (max-width: 640px) {
+  [data-scope="discord-identity"] .di-ambient {
+    opacity: 0.72;
+  }
+
+  [data-scope="discord-identity"] .di-ambient__aurora {
+    width: 78vw;
+    height: 78vw;
+    filter: blur(54px);
+  }
+
+  [data-scope="discord-identity"] .di-ambient__wireframe {
+    opacity: 0.24;
+  }
+
+  [data-scope="discord-identity"] .di-ambient__orbit--one {
+    width: 120vw;
+    top: 18%;
+    left: 72%;
+  }
+
+  [data-scope="discord-identity"] .di-ambient__orbit--two {
+    width: 90vw;
+    top: 76%;
+    left: 18%;
+  }
+
+  [data-scope="discord-identity"] .di-ambient__mote:nth-child(n + 8) {
+    display: none;
+  }
+}
+
+/* The ambient layer follows the OS preference by default, but the nav
+   motion switch can explicitly opt back in. This keeps the preference
+   respected without making a live background impossible to preview. */
+[data-scope="discord-identity"][data-motion="off"] .di-ambient,
+[data-scope="discord-identity"][data-motion="off"] .di-ambient * {
+  animation: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  [data-scope="discord-identity"]:not([data-motion="on"]) .di-ambient__aurora,
+  [data-scope="discord-identity"]:not([data-motion="on"]) .di-ambient__mesh,
+  [data-scope="discord-identity"]:not([data-motion="on"]) .di-ambient__wire,
+  [data-scope="discord-identity"]:not([data-motion="on"]) .di-ambient__node,
+  [data-scope="discord-identity"]:not([data-motion="on"]) .di-ambient__orbit,
+  [data-scope="discord-identity"]:not([data-motion="on"]) .di-ambient__beam,
+  [data-scope="discord-identity"]:not([data-motion="on"]) .di-ambient__mote,
   [data-scope="discord-identity"] .di-hero__avatar-orbit,
   [data-scope="discord-identity"] .di-hero__card-scan,
   [data-scope="discord-identity"] .di-signal-rail__bar {
     animation: none;
+  }
+
+  [data-scope="discord-identity"]:not([data-motion="on"]) .di-ambient__beam {
+    opacity: 0.18;
   }
 
   [data-scope="discord-identity"] .di-things__row:hover,

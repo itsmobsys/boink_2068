@@ -1,4 +1,5 @@
 import "./globals.css";
+import { MotionConfig } from "motion/react";
 
 /* The UI uses local system stacks so the page stays instant and works
    offline in development. The visual system still exposes the same
@@ -51,7 +52,9 @@ export default function RootLayout({ children }) {
         <noscript>
           <style>{`[data-scope="discord-identity"] [style*="opacity: 0"]{opacity:1 !important;filter:none !important;transform:none !important;}`}</style>
         </noscript>
-        {children}
+        <MotionConfig reducedMotion={process.env.NODE_ENV === "production" ? "user" : "never"}>
+          {children}
+        </MotionConfig>
       </body>
     </html>
   );

@@ -11,6 +11,7 @@ import { ThingsIDo } from "./ThingsIDo";
 import { Currently } from "./Currently";
 import { Final } from "./Final";
 import { Starfield } from "./Starfield";
+import { AmbientSignal } from "./AmbientSignal";
 import { Nav } from "./Nav";
 
 /**
@@ -23,6 +24,7 @@ import { Nav } from "./Nav";
 export function DiscordIdentityPage({ data }) {
   return (
     <div data-scope="discord-identity" className="di-root" id="top">
+      <AmbientSignal />
       <Starfield />
       <span className="di-grain" aria-hidden="true" />
       <Nav presence={data.profile.presence} />

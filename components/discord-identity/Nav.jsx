@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion, useScroll, useSpring } from "motion/react";
+import { AmbientMotionToggle } from "./AmbientMotionToggle";
 
 const LINKS = [
   { href: "#di-about", label: "About" },
@@ -88,6 +89,8 @@ export function Nav({ presence = "offline" }) {
             </li>
           ))}
         </ul>
+
+        <AmbientMotionToggle />
 
         <span
           role="status"
