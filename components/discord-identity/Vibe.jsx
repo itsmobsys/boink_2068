@@ -193,7 +193,15 @@ export function Vibe({ vibe }) {
           </Reveal>
         )}
 
-        <Reveal index={3}>
+        <Reveal index={3} size="sm">
+          <div className="di-vibe__section-meta di-mono" aria-label="Vibe file metadata">
+            <span>input / structured</span>
+            <span className="di-vibe__section-meta-rule" aria-hidden="true" />
+            <span>output / human</span>
+          </div>
+        </Reveal>
+
+        <Reveal index={4}>
           <div className="di-vibe__stage" data-phase={phase}>
             <div className="di-vibe__deck">
               {/* status bar — the visual anchor that reacts to compilation */}

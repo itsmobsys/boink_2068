@@ -1,28 +1,8 @@
 import "./globals.css";
-import { Inter, Inter_Tight, JetBrains_Mono } from "next/font/google";
 
-/* next/font hosts the files at build time — no render-blocking
-   external stylesheet, same families as the Step 1 design. */
-const display = Inter_Tight({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--next-display",
-  display: "swap",
-});
-
-const body = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  variable: "--next-body",
-  display: "swap",
-});
-
-const mono = JetBrains_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  variable: "--next-mono",
-  display: "swap",
-});
+/* The UI uses local system stacks so the page stays instant and works
+   offline in development. The visual system still exposes the same
+   font variables for the scoped component styles. */
 
 export const metadata = {
   title: {
@@ -55,13 +35,13 @@ export const metadata = {
 };
 
 export const viewport = {
-  themeColor: "#08090c",
+  themeColor: "#07090f",
   colorScheme: "dark",
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable} ${mono.variable}`}>
+    <html lang="en">
       <body>
         {/* The reveal primitive only hides content once its JS runs —
             SSR markup renders in its natural resting state, so no-JS

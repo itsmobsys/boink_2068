@@ -5,16 +5,16 @@
    page background, and overflow guard. */
 
 :root {
-  --font-display: var(--next-display, "Inter Tight", "Inter", -apple-system, "Segoe UI", sans-serif);
-  --font-body: var(--next-body, "Inter", -apple-system, "Segoe UI", sans-serif);
-  --font-mono: var(--next-mono, "JetBrains Mono", "SFMono-Regular", Consolas, monospace);
+  --font-display: "Arial", "Helvetica Neue", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body: "Inter", "Helvetica Neue", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "SFMono-Regular", "Cascadia Code", "Roboto Mono", Consolas, monospace;
   color-scheme: dark;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html {
-  background: #08090c;
+  background: #07090f;
   scrollbar-width: thin;
   scrollbar-color: #2a2a33 transparent;
   scroll-behavior: smooth;
@@ -24,7 +24,7 @@ html {
 body {
   min-height: 100vh;
   min-height: 100svh;
-  background: #08090c;
+  background: #07090f;
   color: #e9ebf0;
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;

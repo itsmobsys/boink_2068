@@ -47,6 +47,11 @@ export function About({ about, profile }) {
                 <span>{about.contextLabel ?? "In short"}</span>
                 <span>Fig. {index}</span>
               </div>
+              <div className="di-about__card-mark" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </div>
               <p className="di-about__card-sig">Sig — {index}</p>
               <p className="di-about__card-cap di-mono">Identity mark</p>
               {pills.length > 0 && (
@@ -56,6 +61,10 @@ export function About({ about, profile }) {
                   ))}
                 </ul>
               )}
+              <div className="di-about__card-foot di-mono">
+                <span>signal / stable</span>
+                <span>↗</span>
+              </div>
             </div>
           </Reveal>
 

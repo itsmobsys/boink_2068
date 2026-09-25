@@ -2,6 +2,7 @@
 
 import "./tokens.css";
 import "./discord-identity.css";
+import "./polish.css";
 
 import { Hero } from "./Hero";
 import { About } from "./About";

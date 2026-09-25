@@ -20,16 +20,20 @@ export function Currently({ currently }) {
   const cyclerIndex = i;
 
   return (
-    <section className="di-section di-currently" aria-labelledby="di-currently-heading">
+    <section
+      id="di-currently"
+      className="di-section di-currently"
+      aria-labelledby="di-currently-heading"
+    >
       <div className="di-container">
         <Reveal index={eyebrowIndex}>
-          <h2 id="di-currently-heading" className="di-eyebrow di-mono">
-            {currently.eyebrow}
-          </h2>
+          <p className="di-eyebrow di-mono">{currently.eyebrow}</p>
         </Reveal>
         {currently.heading && (
           <Reveal index={headingIndex}>
-            <p className="di-currently__heading">{currently.heading}</p>
+            <h2 id="di-currently-heading" className="di-currently__heading">
+              {currently.heading}
+            </h2>
           </Reveal>
         )}
         {currently.intro && (
@@ -44,9 +48,14 @@ export function Currently({ currently }) {
         )}
 
         <Reveal index={featuredIndex} className="di-currently__featured">
-          <span className="di-currently__featured-label di-mono">
-            {currently.featured.label}
-          </span>
+          <div className="di-currently__featured-top di-mono">
+            <span className="di-currently__featured-label">
+              {currently.featured.label}
+            </span>
+            <span className="di-currently__featured-badge">
+              <span aria-hidden="true" /> active
+            </span>
+          </div>
           <p className="di-currently__featured-value">{currently.featured.value}</p>
           {currently.featured.detail && (
             <p className="di-currently__featured-detail">{currently.featured.detail}</p>

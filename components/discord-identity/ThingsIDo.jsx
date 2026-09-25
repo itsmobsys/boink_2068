@@ -40,9 +40,18 @@ export function ThingsIDo({ things }) {
           </Reveal>
         )}
 
+        <Reveal index={3} size="sm">
+          <div className="di-things__mode di-mono" aria-label="Activity feed status">
+            <span className="di-things__mode-dot" aria-hidden="true" />
+            <span>activity feed / always on</span>
+            <span className="di-things__mode-rule" aria-hidden="true" />
+            <span>{String(things.items.length).padStart(2, "0")} entries</span>
+          </div>
+        </Reveal>
+
         <ol className="di-things__list">
           {things.items.map((thing, i) => (
-            <Reveal as="li" key={thing.title} index={i + 1} size="sm">
+            <Reveal as="li" key={thing.title} index={i + 4} size="sm">
               <motion.div className="di-things__row" whileHover="hover">
                 <span className="di-things__index di-mono" aria-hidden="true">
                   {String(i + 1).padStart(2, "0")}
@@ -68,16 +77,16 @@ export function ThingsIDo({ things }) {
           ))}
         </ol>
 
-        <Reveal index={things.items.length + 1} className="di-things__loop">
+        <Reveal index={things.items.length + 4} className="di-things__loop">
           <LoopDiagram steps={loopSteps} />
         </Reveal>
         {things.loopCaption && (
-          <Reveal index={things.items.length + 2}>
+          <Reveal index={things.items.length + 5}>
             <p className="di-things__caption di-mono">{things.loopCaption}</p>
           </Reveal>
         )}
         {things.closing && (
-          <Reveal index={things.items.length + 3}>
+          <Reveal index={things.items.length + 6}>
             <p className="di-things__closing di-mono">{things.closing}</p>
           </Reveal>
         )}
