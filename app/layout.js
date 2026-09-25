@@ -44,13 +44,11 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
-        {/* The reveal primitive only hides content once its JS runs —
-            SSR markup renders in its natural resting state, so no-JS
-            visitors already see everything. This noscript block is
-            belt-and-suspenders for any cached markup that shipped with
-            entrance styles inline: force the resting state. */}
+        {/* Reveal has a deterministic pre-entrance state for smooth
+            hydration. This noscript block preserves the readable resting
+            state for visitors without JavaScript or cached HTML. */}
         <noscript>
-          <style>{`[data-scope="discord-identity"] [style*="opacity: 0"]{opacity:1 !important;filter:none !important;transform:none !important;}`}</style>
+          <style>{`[data-scope="discord-identity"] [data-reveal]{opacity:1 !important;filter:none !important;transform:none !important;}`}</style>
         </noscript>
         <MotionConfig reducedMotion={process.env.NODE_ENV === "production" ? "user" : "never"}>
           {children}

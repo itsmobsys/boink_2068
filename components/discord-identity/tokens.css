@@ -87,13 +87,13 @@
   --di-star-drift-duration-near: 65s;
 
   /* ---- motion (overridden to 0 by reduced-motion below) ---- */
-  --di-rise: 60px;
-  --di-rise-sm: 34px;
-  --di-blur: 14px;
-  --di-blur-sm: 8px;
-  --di-scale: 0.978;
-  --di-ease: cubic-bezier(0.16, 0.9, 0.3, 1);
-  --di-stagger: 90ms;
+  --di-rise: 18px;
+  --di-rise-sm: 10px;
+  --di-blur: 0px;
+  --di-blur-sm: 0px;
+  --di-scale: 1;
+  --di-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --di-stagger: 45ms;
 
   background: var(--di-bg);
   color: var(--di-text);
@@ -192,11 +192,11 @@
 
 @media (max-width: 640px) {
   [data-scope="discord-identity"] {
-    --di-rise: 30px;
-    --di-rise-sm: 18px;
-    --di-blur: 7px;
-    --di-blur-sm: 4px;
-    --di-scale: 0.985;
-    --di-stagger: 60ms;
+    --di-rise: 12px;
+    --di-rise-sm: 7px;
+    --di-blur: 0px;
+    --di-blur-sm: 0px;
+    --di-scale: 1;
+    --di-stagger: 35ms;
   }
 }

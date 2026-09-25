@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion, useReducedMotion } from "motion/react";
 import { Reveal } from "./Reveal";
 
 const PRESENCE_LABEL = {
@@ -59,18 +57,6 @@ function HeroAvatar({ profile }) {
 }
 
 export function Hero({ profile, skills }) {
-  const reduced = useReducedMotion();
-  // Same mount gate as Reveal: the first client render must match SSR
-  // exactly (React 19 throws #418 on any mismatch).
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-  const canObserve =
-    mounted &&
-    typeof window !== "undefined" &&
-    typeof window.IntersectionObserver === "function";
-
   return (
     <section className="di-section di-hero" aria-label="Introduction">
       <div className="di-hero__aurora" aria-hidden="true" />
@@ -188,26 +174,18 @@ export function Hero({ profile, skills }) {
           </div>
           <ul className="di-hero__skills" role="list">
             {skills.map((skill, i) => (
-              <motion.li
+              <Reveal
+                as="li"
                 key={skill.label}
                 className="di-chip"
                 data-group={skill.group}
                 tabIndex={0}
-                initial={!canObserve || reduced ? false : { opacity: 0, y: 12 }}
-                whileInView={
-                  !canObserve || reduced ? { opacity: 1 } : { opacity: 1, y: 0 }
-                }
-                viewport={{ once: true, margin: "-5% 0px" }}
-                transition={{
-                  duration: reduced ? 0 : 0.45,
-                  delay: reduced ? 0 : 0.05 + i * 0.03,
-                  ease: [0.16, 0.9, 0.3, 1],
-                }}
-                whileHover={reduced ? undefined : { y: -3 }}
+                index={i}
+                size="sm"
               >
                 <span className="di-chip__dot" aria-hidden="true" />
                 <span className="di-chip__label">{skill.label}</span>
-              </motion.li>
+              </Reveal>
             ))}
           </ul>
         </Reveal>
