@@ -1047,8 +1047,29 @@
 /* --- vibe reduced motion: the machine changes state, never animates --- */
 @media (prefers-reduced-motion: reduce) {
   [data-scope="discord-identity"] .di-vibe__deck-dot,
-  [data-scope="discord-identity"] .di-vibe__idle-dot {
+  [data-scope="discord-identity"] .di-vibe__idle-dot,
+  [data-scope="discord-identity"] .di-vibe__deck-scan,
+  [data-scope="discord-identity"] .di-vibe__deck-flash,
+  [data-scope="discord-identity"] .di-vibe__wire::after,
+  [data-scope="discord-identity"] .di-vibe__compile::after,
+  [data-scope="discord-identity"] .di-vibe__output-caret,
+  [data-scope="discord-identity"] .di-vibe__output-line::before,
+  [data-scope="discord-identity"] .di-vibe__idle-schema li,
+  [data-scope="discord-identity"] .di-vibe__deck-progress::after {
     animation: none;
+  }
+  [data-scope="discord-identity"] .di-vibe__deck-scan,
+  [data-scope="discord-identity"] .di-vibe__deck-flash,
+  [data-scope="discord-identity"] .di-vibe__wire::after,
+  [data-scope="discord-identity"] .di-vibe__deck-progress::after {
+    opacity: 0;
+  }
+  [data-scope="discord-identity"] .di-vibe__deck-status,
+  [data-scope="discord-identity"] .di-vibe__deck-corner,
+  [data-scope="discord-identity"] .di-vibe__src-line,
+  [data-scope="discord-identity"] .di-vibe__src-gutter {
+    animation: none;
+    transition: none;
   }
   [data-scope="discord-identity"] .di-vibe__idle::after {
     animation: none;

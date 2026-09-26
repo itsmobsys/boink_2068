@@ -1329,6 +1329,467 @@
   font-size: 0.62rem;
 }
 
+/* ============================================================
+   VIBE — COMPILER PASS
+   The compile cycle is a real pass over the file, not a wait:
+   a read head walks the source line by line while the hairline
+   fills and the meter counts, then the file recedes and the
+   read-out prints in. Everything below is keyed off the same
+   data-phase the component already drives, so React owns the
+   state and CSS owns the cinema.
+   ============================================================ */
+
+[data-scope="discord-identity"] .di-vibe__deck {
+  isolation: isolate;
+}
+
+/* blueprint bed — gives the chassis a surface to read against */
+[data-scope="discord-identity"] .di-vibe__deck-bed {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(157, 170, 204, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(157, 170, 204, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  -webkit-mask-image: radial-gradient(120% 95% at 50% 0%, #000 30%, transparent 80%);
+  mask-image: radial-gradient(120% 95% at 50% 0%, #000 30%, transparent 80%);
+}
+
+/* CRT sweep — one band travelling down the chassis while it works */
+[data-scope="discord-identity"] .di-vibe__deck-scan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 170px;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(139, 125, 255, 0.07) 60%,
+    rgba(139, 125, 255, 0.14)
+  );
+  border-bottom: 1px solid rgba(139, 125, 255, 0.3);
+}
+[data-scope="discord-identity"] .di-vibe__stage[data-phase="compiling"] .di-vibe__deck-scan {
+  opacity: 1;
+  animation: di-vibe-deck-scan 1.9s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+[data-scope="discord-identity"] .di-vibe__stage[data-phase="decompiling"] .di-vibe__deck-scan {
+  opacity: 1;
+  animation: di-vibe-deck-scan 1.15s cubic-bezier(0.4, 0, 0.2, 1) reverse infinite;
+}
+@keyframes di-vibe-deck-scan {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(760%); }
+}
+
+/* lock flash — one hit when the read-out lands */
+[data-scope="discord-identity"] .di-vibe__deck-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0;
+  border: 1px solid rgba(139, 125, 255, 0.55);
+  box-shadow: inset 0 0 70px -8px rgba(139, 125, 255, 0.7);
+}
+[data-scope="discord-identity"] .di-vibe__stage[data-phase="done"] .di-vibe__deck-flash {
+  animation: di-vibe-deck-lock 0.8s ease-out 1;
+}
+@keyframes di-vibe-deck-lock {
+  0% { opacity: 0; }
+  16% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* corner brackets — the chassis reads as a machine, not a card */
+[data-scope="discord-identity"] .di-vibe__deck-corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0.45;
+  transition: opacity 0.45s ease, transform 0.6s var(--di-ease);
+}
+[data-scope="discord-identity"] .di-vibe__deck-corner--tl {
+  top: 9px;
+  left: 9px;
+  border-top: 1px solid var(--di-accent-line);
+  border-left: 1px solid var(--di-accent-line);
+}
+[data-scope="discord-identity"] .di-vibe__deck-corner--tr {
+  top: 9px;
+  right: 9px;
+  border-top: 1px solid var(--di-accent-line);
+  border-right: 1px solid var(--di-accent-line);
+}
+[data-scope="discord-identity"] .di-vibe__deck-corner--bl {
+  bottom: 9px;
+  left: 9px;
+  border-bottom: 1px solid var(--di-accent-line);
+  border-left: 1px solid var(--di-accent-line);
+}
+[data-scope="discord-identity"] .di-vibe__deck-corner--br {
+  bottom: 9px;
+  right: 9px;
+  border-bottom: 1px solid var(--di-accent-line);
+  border-right: 1px solid var(--di-accent-line);
+}
+[data-scope="discord-identity"] .di-vibe__stage[data-phase="compiling"] .di-vibe__deck-corner,
+[data-scope="discord-identity"] .di-vibe__stage[data-phase="decompiling"] .di-vibe__deck-corner {
+  opacity: 1;
+  transform: scale(1.18);
+}
+[data-scope="discord-identity"] .di-vibe__stage[data-phase="done"] .di-vibe__deck-corner {
+  opacity: 0.8;
+}
+
+/* content sits above the chassis dressing */
+[data-scope="discord-identity"] .di-vibe__deck-bar,
+[data-scope="discord-identity"] .di-vibe__deck-progress,
+[data-scope="discord-identity"] .di-vibe__deck-grid {
+  position: relative;
+  z-index: 1;
+}
+
+/* live read meter in the status bar */
+[data-scope="discord-identity"] .di-vibe__deck-meter {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  flex: none;
+  color: var(--di-text-faint);
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+}
+[data-scope="discord-identity"] .di-vibe__deck-meter-pct {
+  min-width: 3.6ch;
+  text-align: right;
+  color: var(--di-accent-2);
+  font-variant-numeric: tabular-nums;
+}
+[data-scope="discord-identity"] .di-vibe__deck-meter-sep {
+  opacity: 0.5;
+}
+[data-scope="discord-identity"] .di-vibe__deck-meter-lines {
+  font-variant-numeric: tabular-nums;
+}
+[data-scope="discord-identity"] .di-vibe__stage[data-phase="done"] .di-vibe__deck-meter-pct {
+  text-shadow: 0 0 14px rgba(103, 232, 209, 0.55);
+}
+[data-scope="discord-identity"] .di-vibe__stage[data-phase="idle"] .di-vibe__deck-meter {
+  opacity: 0.5;
+}
+
+/* status swaps with a small settle instead of a hard cut */
+[data-scope="discord-identity"] .di-vibe__deck-status {
+  animation: di-vibe-status-in 0.5s var(--di-ease) both;
+}
+@keyframes di-vibe-status-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+    letter-spacing: 0.42em;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    letter-spacing: 0.15em;
+  }
+}
+
+/* hairline with a travelling head while the file is read */
+[data-scope="discord-identity"] .di-vibe__deck-progress {
+  overflow: hidden;
+  height: 2px;
+}
+[data-scope="discord-identity"] .di-vibe__deck-progress::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 24%;
+  height: 100%;
+  opacity: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.9),
+    transparent
+  );
+}
+[data-scope="discord-identity"] .di-vibe__stage[data-phase="compiling"] .di-vibe__deck-progress {
+  box-shadow: 0 0 14px -2px rgba(139, 125, 255, 0.9);
+}
+[data-scope="discord-identity"] .di-vibe__stage[data-phase="compiling"] .di-vibe__deck-progress::after {
+  opacity: 1;
+  animation: di-vibe-comet 1.15s linear infinite;
+}
+@keyframes di-vibe-comet {
+  from { transform: translateX(-130%); }
+  to { transform: translateX(520%); }
+}
+
+/* ---- the read pass over the source file ----
+   The file stays legible while the machine works (it is being read),
+   then recedes once the read-out has landed. The read head and the
+   already-read lines are driven by React state, not animation, so
+   the highlight always sits exactly on the line being read. */
+[data-scope="discord-identity"] .di-vibe__pane--source {
+  transition: opacity 0.45s ease, filter 0.45s ease;
+}
+[data-scope="discord-identity"] .di-vibe__stage[data-phase="compiling"] .di-vibe__pane--source {
+  opacity: 0.86;
+  filter: saturate(0.85);
+}
+[data-scope="discord-identity"] .di-vibe__stage[data-phase="done"] .di-vibe__pane--source {
+  opacity: 0.34;
+  filter: saturate(0.55);
+}
+[data-scope="discord-identity"] .di-vibe__stage[data-phase="decompiling"] .di-vibe__pane--source {
+  opacity: 0.92;
+  filter: none;
+}
+
+[data-scope="discord-identity"] .di-vibe__src-line {
+  position: relative;
+  opacity: 0.72;
+  transition: opacity 0.3s ease, background 0.18s ease, transform 0.18s var(--di-ease);
+}
+[data-scope="discord-identity"] .di-vibe__src-line[data-past="true"] {
+  opacity: 0.95;
+}
+[data-scope="discord-identity"] .di-vibe__src-line[data-read="true"] {
+  opacity: 1;
+  transform: translateX(3px);
+  background: rgba(103, 232, 209, 0.12);
+  box-shadow: inset 2px 0 0 var(--di-accent-2);
+}
+[data-scope="discord-identity"] .di-vibe__src-line[data-read="true"] .di-vibe__src-gutter {
+  color: var(--di-accent-2);
+  opacity: 1;
+  transform: translateX(-3px);
+}
+[data-scope="discord-identity"] .di-vibe__src-gutter {
+  transition: color 0.2s ease, opacity 0.3s ease, transform 0.2s var(--di-ease);
+}
+
+/* ---- data packets on the wires ---- */
+[data-scope="discord-identity"] .di-vibe__wire::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  margin-left: -1.5px;
+  top: 0;
+  width: 3px;
+  height: 13px;
+  border-radius: 2px;
+  opacity: 0;
+  background: var(--di-accent-2);
+  box-shadow: 0 0 10px rgba(103, 232, 209, 0.85);
+}
+[data-scope="discord-identity"] .di-vibe__wire {
+  position: relative;
+}
+[data-scope="discord-identity"] .di-vibe__stage[data-phase="compiling"] .di-vibe__wire::after {
+  opacity: 1;
+  animation: di-vibe-packet 1.15s linear infinite;
+}
+[data-scope="discord-identity"] .di-vibe__stage[data-phase="decompiling"] .di-vibe__wire::after {
+  opacity: 1;
+  animation: di-vibe-packet 0.9s linear infinite reverse;
+}
+[data-scope="discord-identity"] .di-vibe__wire:last-of-type::after {
+  animation-delay: 0.16s !important;
+}
+@keyframes di-vibe-packet {
+  from { top: -16px; }
+  to { top: 100%; }
+}
+
+/* ---- button: a light pass on hover ---- */
+[data-scope="discord-identity"] .di-vibe__compile {
+  position: relative;
+  overflow: hidden;
+}
+[data-scope="discord-identity"] .di-vibe__compile::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 36%,
+    rgba(255, 255, 255, 0.16) 50%,
+    transparent 64%
+  );
+  transform: translateX(-130%);
+}
+[data-scope="discord-identity"] .di-vibe__compile:hover:not(:disabled)::after {
+  animation: di-vibe-shine 0.85s var(--di-ease) 1;
+}
+@keyframes di-vibe-shine {
+  to { transform: translateX(130%); }
+}
+
+/* ---- output: prints in, with a drawn rule and a live caret ---- */
+[data-scope="discord-identity"] .di-vibe__output-body {
+  position: relative;
+}
+[data-scope="discord-identity"] .di-vibe__output-line {
+  position: relative;
+  padding-left: 1.05rem;
+}
+[data-scope="discord-identity"] .di-vibe__output-line::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.8rem;
+  bottom: 0.8rem;
+  width: 2px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--di-accent-2), rgba(103, 232, 209, 0));
+  transform: scaleY(0);
+  transform-origin: 50% 0;
+  animation: di-vibe-bar-draw 0.45s var(--di-ease) both;
+  animation-delay: calc(var(--i, 0) * 0.07s);
+}
+[data-scope="discord-identity"] .di-vibe__output-line:last-child::before {
+  bottom: 0.2rem;
+}
+@keyframes di-vibe-bar-draw {
+  to { transform: scaleY(1); }
+}
+[data-scope="discord-identity"] .di-vibe__output-caret {
+  display: inline-block;
+  width: 0.44em;
+  height: 1.02em;
+  margin-left: 0.28em;
+  vertical-align: -0.16em;
+  background: var(--di-accent-2);
+  box-shadow: 0 0 12px rgba(103, 232, 209, 0.7);
+  animation: di-vibe-caret 1.05s steps(1) infinite;
+}
+@keyframes di-vibe-caret {
+  0%, 48% { opacity: 1; }
+  49%, 100% { opacity: 0.12; }
+}
+
+/* compiled read-out footer — real counts, real fingerprint */
+[data-scope="discord-identity"] .di-vibe__output-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.9rem;
+  margin: 1.15rem 0 0;
+  padding-top: 0.9rem;
+  border-top: 1px dashed var(--di-border);
+  color: var(--di-text-faint);
+  font-size: 0.55rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+[data-scope="discord-identity"] .di-vibe__output-foot-fp {
+  margin-left: auto;
+  color: var(--di-accent-2);
+  opacity: 0.7;
+}
+
+/* idle pane shows the loaded key index, so the empty state still
+   tells you the file is real */
+[data-scope="discord-identity"] .di-vibe__idle-schema {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.32rem;
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  max-width: 36ch;
+}
+[data-scope="discord-identity"] .di-vibe__idle-schema li {
+  border: 1px solid var(--di-border);
+  border-radius: 999px;
+  padding: 0.16rem 0.5rem;
+  color: var(--di-text-faint);
+  font-size: 0.55rem;
+  letter-spacing: 0.05em;
+  opacity: 0.5;
+  transition: opacity 0.3s ease, border-color 0.3s ease;
+}
+[data-scope="discord-identity"] .di-vibe__stage[data-phase="compiling"] .di-vibe__idle-schema li {
+  animation: di-vibe-schema-pulse 1.15s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * 0.06s);
+}
+@keyframes di-vibe-schema-pulse {
+  0%, 100% { opacity: 0.4; border-color: var(--di-border); }
+  40% { opacity: 0.95; border-color: var(--di-accent-line); }
+}
+
+/* the file's key index lifts once the read-out has landed */
+[data-scope="discord-identity"] .di-vibe__stage[data-phase="done"] .di-vibe__idle-schema li {
+  opacity: 0.75;
+}
+
+/* ---------- vibe: reduced motion — state changes, nothing moves ---------- */
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="discord-identity"] .di-vibe__deck-scan,
+  [data-scope="discord-identity"] .di-vibe__deck-flash,
+  [data-scope="discord-identity"] .di-vibe__deck-progress::after,
+  [data-scope="discord-identity"] .di-vibe__wire::after,
+  [data-scope="discord-identity"] .di-vibe__compile::after,
+  [data-scope="discord-identity"] .di-vibe__output-caret,
+  [data-scope="discord-identity"] .di-vibe__output-line::before,
+  [data-scope="discord-identity"] .di-vibe__idle-schema li {
+    animation: none !important;
+  }
+  [data-scope="discord-identity"] .di-vibe__deck-scan,
+  [data-scope="discord-identity"] .di-vibe__deck-flash,
+  [data-scope="discord-identity"] .di-vibe__deck-progress::after,
+  [data-scope="discord-identity"] .di-vibe__wire::after {
+    opacity: 0 !important;
+  }
+  [data-scope="discord-identity"] .di-vibe__deck-status,
+  [data-scope="discord-identity"] .di-vibe__deck-corner {
+    animation: none;
+    transition: none;
+  }
+  [data-scope="discord-identity"] .di-vibe__src-line,
+  [data-scope="discord-identity"] .di-vibe__src-gutter,
+  [data-scope="discord-identity"] .di-vibe__pane--source,
+  [data-scope="discord-identity"] .di-vibe__idle-schema li {
+    transition: none;
+  }
+  [data-scope="discord-identity"] .di-vibe__src-line[data-read="true"] {
+    transform: none;
+  }
+  [data-scope="discord-identity"] .di-vibe__src-line[data-read="true"] .di-vibe__src-gutter {
+    transform: none;
+  }
+}
+
+/* the deck is taller than a phone; the small chrome sheds first */
+@media (max-width: 760px) {
+  [data-scope="discord-identity"] .di-vibe__deck-meter-lines {
+    display: none;
+  }
+  [data-scope="discord-identity"] .di-vibe__deck-corner {
+    display: none;
+  }
+}
+@media (max-width: 900px) {
+  [data-scope="discord-identity"] .di-vibe__wire::after {
+    display: none;
+  }
+}
+
 /* ---------- habits / activity feed ---------- */
 
 [data-scope="discord-identity"] .di-things__heading {
@@ -1854,6 +2315,20 @@
   }
 
   [data-scope="discord-identity"] .di-vibe__deck-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* The stacked layout has to survive the compile cycle. The phase
+     rules that re-shape the grid to three columns are far more
+     specific than the `1fr` above, and media queries add no
+     specificity of their own — so on their own they win on narrow
+     screens and slam the source and output panes to zero width the
+     moment the machine starts working. Restated at matching
+     specificity so the deck stays stacked and readable throughout,
+     the same way the desktop block re-states its own override. */
+  [data-scope="discord-identity"] .di-vibe__stage[data-phase="compiling"] .di-vibe__deck-grid,
+  [data-scope="discord-identity"] .di-vibe__stage[data-phase="done"] .di-vibe__deck-grid,
+  [data-scope="discord-identity"] .di-vibe__stage[data-phase="decompiling"] .di-vibe__deck-grid {
     grid-template-columns: 1fr;
   }
 
